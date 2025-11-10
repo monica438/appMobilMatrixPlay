@@ -37,6 +37,7 @@ class MainActivity : AppCompatActivity() {
     private var pieces: List<GameObject> = emptyList()
     private var isMyTurn: Boolean = false
     private var myRole: String? = null
+    private var serverHost: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,11 +67,12 @@ class MainActivity : AppCompatActivity() {
         setupButtons()
         
         // obtener config del server
-        val protocol = intent.getStringExtra("protocol") ?: "ws"
-        val host = intent.getStringExtra("host") ?: "10.0.2.2"
-        val port = intent.getStringExtra("port") ?: "3000"
-        
-        connectToServer("$protocol://$host:$port")
+    val protocol = intent.getStringExtra("protocol") ?: "ws"
+    val host = intent.getStringExtra("host") ?: "10.0.2.2"
+    val port = intent.getStringExtra("port") ?: "3000"
+    serverHost = host
+
+    connectToServer("$protocol://$host:$port")
     }
 
     private fun createBoard() {
@@ -126,7 +128,10 @@ class MainActivity : AppCompatActivity() {
         wsClient?.onOpen {
             runOnUiThread {
                 Toast.makeText(this, "Conectado al servidor", Toast.LENGTH_SHORT).show()
-                sendBroadcastMessage("hola")
+                // Enviar "hola" en broadcast solo si estamos conectados al servidor Proxmox
+                if (serverHost == "matrixplay4.ieticloudpro.ieti.cat") {
+                    sendBroadcastMessage("hola")
+                }
             }
         }
         
