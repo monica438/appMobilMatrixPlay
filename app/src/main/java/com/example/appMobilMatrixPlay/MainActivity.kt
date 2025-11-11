@@ -57,12 +57,12 @@ class MainActivity : AppCompatActivity() {
         // Inicializar la bola como blanca
         updateBallColor("WHITE")
 
-        // Obtener config del servidor
+        // Obtener configuración del servidor
         val protocol = intent.getStringExtra("protocol") ?: "wss"
         val host = intent.getStringExtra("host") ?: "matrixplay4.ieti.site"
         val port = intent.getStringExtra("port") ?: "443"
         playerName = intent.getStringExtra("playerName") ?: "Jugador"
-        val player2Name = intent.getStringExtra("player2Name") ?: "Esperando..."
+        val player2Name = intent.getStringExtra("player2Name") ?: "Esperant..."
         myColor = intent.getStringExtra("myColor") ?: "rojo"
         
         // Determinar si somos el jugador izquierdo o derecho
@@ -156,14 +156,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun connectToServer(url: String) {
-        txtStatus.text = "Conectando..."
+        txtStatus.text = "Connectant..."
         
         wsClient = WebSocketClient(url)
         
         wsClient?.onOpen {
             runOnUiThread {
-                txtStatus.text = "Conectado - Esperando inicio del juego..."
-                Toast.makeText(this, "Conectado al servidor", Toast.LENGTH_SHORT).show()
+                txtStatus.text = "Connectat - Esperant inici del joc..."
+                Toast.makeText(this, "Connectat al servidor", Toast.LENGTH_SHORT).show()
             }
         }
         
@@ -173,14 +173,14 @@ class MainActivity : AppCompatActivity() {
         
         wsClient?.onError { error ->
             runOnUiThread {
-                txtStatus.text = "Error de conexión: $error"
+                txtStatus.text = "Error de connexió: $error"
                 Toast.makeText(this, "Error: $error", Toast.LENGTH_LONG).show()
             }
         }
         
         wsClient?.onClose {
             runOnUiThread {
-                txtStatus.text = "Desconectado del servidor"
+                txtStatus.text = "Desconnectat del servidor"
             }
         }
         
@@ -223,8 +223,8 @@ class MainActivity : AppCompatActivity() {
                 
                 "gameStart" -> {
                     runOnUiThread {
-                        txtStatus.text = "¡Juego iniciado!"
-                        Toast.makeText(this, "¡Empieza el Ping Pong!", Toast.LENGTH_SHORT).show()
+                        txtStatus.text = "Joc iniciat!"
+                        Toast.makeText(this, "Comença el Ping Pong!", Toast.LENGTH_SHORT).show()
                     }
                 }
                 
@@ -274,14 +274,14 @@ class MainActivity : AppCompatActivity() {
                         } else {
                             playerLeftName.text = joinedPlayer
                         }
-                        Toast.makeText(this, "$joinedPlayer se ha unido", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "$joinedPlayer s'ha unit", Toast.LENGTH_SHORT).show()
                     }
                 }
                 
                 "gameOver" -> {
                     val winner = json.optString("winner", "")
                     runOnUiThread {
-                        txtStatus.text = "Juego terminado"
+                        txtStatus.text = "Joc acabat"
                         showGameOver(winner)
                     }
                 }
@@ -349,14 +349,14 @@ class MainActivity : AppCompatActivity() {
                       (winner == "negro" && !isLeftPlayer)
         
         val message = if (didIWin) {
-            "🎉 ¡FELICIDADES! 🎉\n\n¡Has ganado la partida!"
+            "🎉 FELICITATS! 🎉\n\nHas guanyat la partida!"
         } else {
-            "😔 Has perdido\n\nEl otro jugador ha ganado"
+            "😔 Has perdut\n\nL'altre jugador ha guanyat"
         }
         
-        builder.setTitle(if (didIWin) "¡VICTORIA!" else "Derrota")
+        builder.setTitle(if (didIWin) "VICTÒRIA!" else "Derrota")
         builder.setMessage(message)
-        builder.setPositiveButton("Volver al Menú") { _, _ ->
+        builder.setPositiveButton("Tornar al Menú") { _, _ ->
             wsClient?.disconnect()
             finish()
         }

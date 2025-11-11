@@ -71,7 +71,7 @@
                     android:id="@+id/et_protocol"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:hint="Nombre del jugador"
+                    android:hint="Nom del jugador"
                     android:inputType="text"
                     android:textColor="@color/black"
                     android:textColorHint="#666666"

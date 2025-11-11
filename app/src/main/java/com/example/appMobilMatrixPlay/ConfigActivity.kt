@@ -7,7 +7,7 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
-// pantalla de configuracion del servidor
+// Pantalla de configuración del servidor
 class ConfigActivity : AppCompatActivity() {
     
     private lateinit var inputPlayerName: EditText
@@ -24,7 +24,7 @@ class ConfigActivity : AppCompatActivity() {
         messageText = findViewById(R.id.txt_message)
         btnConnect = findViewById(R.id.btn_connect)
         
-        // Config por defecto: Proxmox
+        // Configuración por defecto: Proxmox
         setupDefaultConfig()
         
         btnConnect.setOnClickListener { connectServer() }
@@ -42,13 +42,13 @@ class ConfigActivity : AppCompatActivity() {
         val port = "443" // Puerto 443 con SSL
         
         if (playerName.isEmpty() || host.isEmpty()) {
-            messageText.text = "Por favor, completa todos los campos"
+            messageText.text = "Si us plau, completa tots els camps"
             return
         }
         
-        messageText.text = "Conectando..."
+        messageText.text = "Connectant..."
         
-        // pasar config a WaitingRoomActivity
+        // Pasar configuración a WaitingRoomActivity
         val intent = Intent(this, WaitingRoomActivity::class.java).apply {
             putExtra("protocol", protocol)
             putExtra("host", host)

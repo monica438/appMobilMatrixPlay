@@ -172,7 +172,7 @@
                     android:id="@+id/txt_status"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Esperando jugador..."
+                    android:text="Esperant jugador..."
                     android:textAlignment="center"
                     android:textColor="@color/black"
                     android:fontFamily="sans-serif"

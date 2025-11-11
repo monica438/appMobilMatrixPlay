@@ -77,16 +77,16 @@ class WaitingRoomActivity : AppCompatActivity() {
     private fun connectToServer() {
         val url = "$protocol://$host:$port"
         
-        txtStatus.text = "Conectando a $url..."
-        Toast.makeText(this, "Conectando a $url...", Toast.LENGTH_SHORT).show()
+        txtStatus.text = "Connectant a $url..."
+        Toast.makeText(this, "Connectant a $url...", Toast.LENGTH_SHORT).show()
 
         webSocketClient = WebSocketClient(url)
         
         webSocketClient?.onOpen {
             runOnUiThread {
                 isConnectedToServer = true
-                txtStatus.text = "Esperando jugador..."
-                Toast.makeText(this, "Conectado al servidor", Toast.LENGTH_SHORT).show()
+                txtStatus.text = "Esperant jugador..."
+                Toast.makeText(this, "Connectat al servidor", Toast.LENGTH_SHORT).show()
                 
                 // Crear jugador en el servidor
                 createPlayer()
@@ -105,9 +105,9 @@ class WaitingRoomActivity : AppCompatActivity() {
         webSocketClient?.onError { error ->
             runOnUiThread {
                 isConnectedToServer = false
-                txtStatus.text = "Error de conexión: $error"
+                txtStatus.text = "Error de connexió: $error"
                 loadingSpinner.visibility = View.GONE
-                Toast.makeText(this, "Error al conectar: $error\nVolviendo atrás...", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Error al connectar: $error\nTornant enrere...", Toast.LENGTH_LONG).show()
                 
                 // Volver a ConfigActivity después de 2 segundos
                 handler.postDelayed({
@@ -119,8 +119,8 @@ class WaitingRoomActivity : AppCompatActivity() {
         webSocketClient?.onClose {
             runOnUiThread {
                 if (isConnectedToServer && !player2Connected) {
-                    txtStatus.text = "Conexión cerrada"
-                    Toast.makeText(this, "Conexión perdida. Volviendo atrás...", Toast.LENGTH_SHORT).show()
+                    txtStatus.text = "Connexió tancada"
+                    Toast.makeText(this, "Connexió perduda. Tornant enrere...", Toast.LENGTH_SHORT).show()
                     handler.postDelayed({
                         finish()
                     }, 1500)
@@ -189,14 +189,14 @@ class WaitingRoomActivity : AppCompatActivity() {
                                     txtPlayer2Name.text = jugador2
                                     txtPlayer2Name.visibility = View.VISIBLE
                                     txtPlayer2Label.text = "NOM\nJUGADOR"
-                                    txtStatus.text = "¡Ambos jugadores conectados!"
+                                    txtStatus.text = "Tots dos jugadors connectats!"
                                     loadingSpinner.visibility = View.GONE
                                     
                                     // Configurar iconos
                                     player2Icon.setImageResource(R.drawable.negro)
                                     
                                     Log.d(TAG, "✅ Jugador 2 detectado: $jugador2")
-                                    Toast.makeText(this, "Jugador 2 conectado: $jugador2", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(this, "Jugador 2 connectat: $jugador2", Toast.LENGTH_SHORT).show()
                                     
                                     // Iniciar juego después de 3 segundos
                                     startGameWithDelay()
@@ -216,7 +216,7 @@ class WaitingRoomActivity : AppCompatActivity() {
                         } else if (myColor == "negro") {
                             player1Icon.setImageResource(R.drawable.negro)
                         }
-                        Toast.makeText(this, "Color asignado: $myColor", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Color assignat: $myColor", Toast.LENGTH_SHORT).show()
                     }
                 }
                 
@@ -226,7 +226,7 @@ class WaitingRoomActivity : AppCompatActivity() {
                     
                     // Mostrar mensaje en popup solo si no es el mensaje inicial "hola"
                     if (broadcastMessage != "hola") {
-                        showPopupMessage("Mensaje de $senderName", broadcastMessage)
+                        showPopupMessage("Missatge de $senderName", broadcastMessage)
                     }
                     
                     // Si recibimos un broadcast de otro jugador (no nosotros mismos)
@@ -234,7 +234,7 @@ class WaitingRoomActivity : AppCompatActivity() {
                         runOnUiThread {
                             // Verificar que estamos conectados antes de proceder
                             if (!isConnectedToServer) {
-                                Toast.makeText(this, "Error: No conectado al servidor", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this, "Error: No connectat al servidor", Toast.LENGTH_SHORT).show()
                                 finish()
                                 return@runOnUiThread
                             }
@@ -244,7 +244,7 @@ class WaitingRoomActivity : AppCompatActivity() {
                             txtPlayer2Name.text = senderName
                             txtPlayer2Name.visibility = View.VISIBLE
                             txtPlayer2Label.text = "NOM\nJUGADOR"
-                            txtStatus.text = "¡Ambos jugadores conectados!"
+                            txtStatus.text = "Tots dos jugadors connectats!"
                             loadingSpinner.visibility = View.GONE
                             
                             // Configurar icono del jugador 2 según nuestro color
@@ -268,7 +268,7 @@ class WaitingRoomActivity : AppCompatActivity() {
                     if (joinedPlayerName != playerName && !player2Connected) {
                         runOnUiThread {
                             if (!isConnectedToServer) {
-                                Toast.makeText(this, "Error: No conectado al servidor", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this, "Error: No connectat al servidor", Toast.LENGTH_SHORT).show()
                                 finish()
                                 return@runOnUiThread
                             }
@@ -277,7 +277,7 @@ class WaitingRoomActivity : AppCompatActivity() {
                             txtPlayer2Name.text = joinedPlayerName
                             txtPlayer2Name.visibility = View.VISIBLE
                             txtPlayer2Label.text = "NOM\nJUGADOR"
-                            txtStatus.text = "¡Ambos jugadores conectados!"
+                            txtStatus.text = "Tots dos jugadors connectats!"
                             loadingSpinner.visibility = View.GONE
                             
                             if (myColor == "rojo") {
@@ -292,17 +292,17 @@ class WaitingRoomActivity : AppCompatActivity() {
                 }
                 
                 "serverData" -> {
-                    val data = json.optString("data", "Sin datos")
+                    val data = json.optString("data", "Sense dades")
                     runOnUiThread {
-                        Toast.makeText(this, "Datos: $data", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, "Dades: $data", Toast.LENGTH_LONG).show()
                     }
                 }
                 
                 "countdown" -> {
                     val count = json.optInt("count", 0)
                     runOnUiThread {
-                        txtStatus.text = "Iniciando en $count..."
-                        Toast.makeText(this, "Cuenta atrás: $count", Toast.LENGTH_SHORT).show()
+                        txtStatus.text = "Iniciant en $count..."
+                        Toast.makeText(this, "Compte enrere: $count", Toast.LENGTH_SHORT).show()
                     }
                 }
                 
@@ -328,7 +328,7 @@ class WaitingRoomActivity : AppCompatActivity() {
                     if (otherPlayerName.isNotEmpty() && !player2Connected) {
                         runOnUiThread {
                             if (!isConnectedToServer) {
-                                Toast.makeText(this, "Error: No conectado al servidor", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this, "Error: No connectat al servidor", Toast.LENGTH_SHORT).show()
                                 finish()
                                 return@runOnUiThread
                             }
@@ -337,7 +337,7 @@ class WaitingRoomActivity : AppCompatActivity() {
                             txtPlayer2Name.text = otherPlayerName
                             txtPlayer2Name.visibility = View.VISIBLE
                             txtPlayer2Label.text = "NOM\nJUGADOR"
-                            txtStatus.text = "¡Ambos jugadores conectados!"
+                            txtStatus.text = "Tots dos jugadors connectats!"
                             loadingSpinner.visibility = View.GONE
                             
                             if (myColor == "rojo") {
@@ -357,7 +357,7 @@ class WaitingRoomActivity : AppCompatActivity() {
             e.printStackTrace()
             Log.e(TAG, "❌ Error procesando mensaje: ${e.message}")
             runOnUiThread {
-                Toast.makeText(this, "Error procesando mensaje", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Error processant missatge", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -366,7 +366,7 @@ class WaitingRoomActivity : AppCompatActivity() {
         // Doble verificación: Solo iniciar el juego si estamos conectados al servidor
         if (!isConnectedToServer) {
             runOnUiThread {
-                Toast.makeText(this, "No se puede iniciar: sin conexión", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "No es pot iniciar: sense connexió", Toast.LENGTH_SHORT).show()
                 finish()
             }
             return
@@ -375,7 +375,7 @@ class WaitingRoomActivity : AppCompatActivity() {
         // Verificar también que el jugador 2 esté conectado
         if (!player2Connected) {
             runOnUiThread {
-                Toast.makeText(this, "No se puede iniciar: esperando jugador 2", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "No es pot iniciar: esperant jugador 2", Toast.LENGTH_SHORT).show()
             }
             return
         }
@@ -394,7 +394,7 @@ class WaitingRoomActivity : AppCompatActivity() {
                 startActivity(intent)
                 finish() // Cerrar WaitingRoomActivity
             } else {
-                Toast.makeText(this, "Error: Conexión perdida", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Error: Connexió perduda", Toast.LENGTH_SHORT).show()
                 finish()
             }
         }, 3000) // 3 segundos de delay
