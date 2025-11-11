@@ -1,127 +1,204 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="20dp" >
+    android:background="@color/background_blue"
+    android:fillViewport="true">
 
-    <TextView
-        android:id="@+id/title"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
-        android:text="Conecta 4 Online"
-        android:textAlignment="center"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:padding="16dp">
 
-    <LinearLayout
-        android:id="@+id/config_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
-        android:orientation="vertical"
-        app:layout_constraintTop_toBottomOf="@id/title">
+        <!-- Logo en la esquina superior derecha -->
+        <ImageView
+            android:id="@+id/logo_small"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/logo"
+            android:scaleType="fitCenter"
+            android:contentDescription="Logo"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-        <TextView
-            android:layout_width="wrap_content"
+        <!-- Panel de Login centrado -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/login_card"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Protocolo:"
-            android:textSize="16sp"/>
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="24dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@color/background_blue"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintWidth_max="500dp">
 
-        <EditText
-            android:id="@+id/et_protocol"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="ws o wss"
-            android:inputType="text"
-            android:textSize="16sp"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Host:"
-            android:textSize="16sp"/>
-
-        <EditText
-            android:id="@+id/et_host"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="localhost o IP"
-            android:inputType="text"
-            android:textSize="16sp"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Puerto:"
-            android:textSize="16sp"/>
-
-        <EditText
-            android:id="@+id/et_port"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="3000"
-            android:inputType="number"
-            android:textSize="16sp"/>
-
-        <TextView
-            android:id="@+id/txt_message"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text=""
-            android:textAlignment="center"
-            android:textColor="@android:color/holo_red_dark"
-            android:textSize="14sp"/>
-
-        <Button
-            android:id="@+id/btn_connect"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Conectar"
-            android:textSize="18sp"/>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Configuraciones rápidas:"
-            android:textSize="12sp"
-            android:textStyle="bold"/>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal" >
-
-            <Button
-                android:id="@+id/btn_local"
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="4dp"
-                android:layout_weight="1"
-                android:text="Emulador"
-                android:textSize="12sp"/>
+                android:orientation="vertical"
+                android:padding="24dp">
 
-            <Button
-                android:id="@+id/btn_proxmox"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_weight="1"
-                android:text="Proxmox"
-                android:textSize="12sp"/>
-        </LinearLayout>
+                <!-- Título LOGIN -->
+                <TextView
+                    android:id="@+id/title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="LOGIN"
+                    android:textAlignment="viewStart"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"
+                    android:fontFamily="sans-serif"
+                    android:layout_marginBottom="16dp" />
 
-    </LinearLayout>
+                <!-- Campo NOM (Nombre/Protocol) -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="NOM"
+                    android:textColor="@color/black"
+                    android:fontFamily="sans-serif"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp"/>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+                <EditText
+                    android:id="@+id/et_protocol"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:hint="ws o wss"
+                    android:inputType="text"
+                    android:textColor="@color/black"
+                    android:textColorHint="#666666"
+                    android:fontFamily="sans-serif"
+                    android:textSize="14sp"
+                    android:background="@android:color/white"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:layout_marginBottom="16dp"/>
+
+                <!-- Campo URL (Host + Puerto) -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="URL"
+                    android:textColor="@color/black"
+                    android:fontFamily="sans-serif"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+
+                    <EditText
+                        android:id="@+id/et_host"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:hint="host"
+                        android:inputType="text"
+                        android:textColor="@color/black"
+                        android:textColorHint="#666666"
+                        android:fontFamily="sans-serif"
+                        android:textSize="14sp"
+                        android:background="@android:color/white"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:layout_marginEnd="8dp"/>
+
+                    <EditText
+                        android:id="@+id/et_port"
+                        android:layout_width="100dp"
+                        android:layout_height="48dp"
+                        android:hint="puerto"
+                        android:inputType="number"
+                        android:textColor="@color/black"
+                        android:textColorHint="#666666"
+                        android:fontFamily="sans-serif"
+                        android:textSize="14sp"
+                        android:background="@android:color/white"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"/>
+                </LinearLayout>
+
+                <!-- Mensaje de error -->
+                <TextView
+                    android:id="@+id/txt_message"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textAlignment="center"
+                    android:textColor="@android:color/holo_red_dark"
+                    android:fontFamily="sans-serif"
+                    android:textSize="12sp"
+                    android:layout_marginBottom="8dp"/>
+
+                <!-- Botón CONNECTA -->
+                <Button
+                    android:id="@+id/btn_connect"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:text="CONNECTA"
+                    android:textColor="@color/black"
+                    android:fontFamily="sans-serif"
+                    android:textSize="14sp"
+                    android:paddingStart="32dp"
+                    android:paddingEnd="32dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="16dp"/>
+
+                <!-- Botones rápidos -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Configuraciones rápidas:"
+                    android:textColor="@color/black"
+                    android:fontFamily="sans-serif"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btn_local"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:text="Emulador"
+                        android:textColor="@color/black"
+                        android:fontFamily="sans-serif"
+                        android:textSize="11sp"/>
+
+                    <Button
+                        android:id="@+id/btn_proxmox"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:text="Proxmox"
+                        android:textColor="@color/black"
+                        android:fontFamily="sans-serif"
+                        android:textSize="11sp"/>
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>

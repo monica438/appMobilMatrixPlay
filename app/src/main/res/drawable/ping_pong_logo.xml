@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    
+    <!-- Fondo circular -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M100,20 A80,80 0 1,1 100,180 A80,80 0 1,1 100,20 Z"/>
+    
+    <!-- Mesa de ping pong -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M40,90 L160,90 L160,110 L40,110 Z"/>
+    
+    <!-- Red -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M98,85 L98,115 L102,115 L102,85 Z"/>
+    
+    <!-- Pelota -->
+    <path
+        android:fillColor="#FFC107"
+        android:pathData="M130,70 A12,12 0 1,1 130,70.001 Z"/>
+    
+    <!-- Raqueta izquierda -->
+    <path
+        android:fillColor="#E91E63"
+        android:pathData="M55,95 L65,95 L67,100 L65,105 L55,105 L53,100 Z"/>
+    
+    <!-- Raqueta derecha -->
+    <path
+        android:fillColor="#2196F3"
+        android:pathData="M135,95 L145,95 L147,100 L145,105 L135,105 L133,100 Z"/>
+</vector>
