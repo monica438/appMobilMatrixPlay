@@ -224,6 +224,15 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
+                
+                "broadcast" -> {
+                    // Recibir mensaje broadcast de otros jugadores
+                    val broadcastMessage = json.getString("message")
+                    val senderName = json.optString("senderName", "Jugador")
+                    runOnUiThread {
+                        Toast.makeText(this, "$senderName dice: $broadcastMessage", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         } catch (e: Exception) {
             runOnUiThread {

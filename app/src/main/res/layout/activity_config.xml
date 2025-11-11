@@ -57,7 +57,7 @@
                     android:fontFamily="sans-serif"
                     android:layout_marginBottom="16dp" />
 
-                <!-- Campo NOM (Nombre/Protocol) -->
+                <!-- Campo NOM (Nombre de jugador) -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -71,7 +71,7 @@
                     android:id="@+id/et_protocol"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:hint="ws o wss"
+                    android:hint="Nombre del jugador"
                     android:inputType="text"
                     android:textColor="@color/black"
                     android:textColorHint="#666666"
@@ -82,7 +82,7 @@
                     android:paddingEnd="12dp"
                     android:layout_marginBottom="16dp"/>
 
-                <!-- Campo URL (Host + Puerto) -->
+                <!-- Campo URL (Host solamente) -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -92,42 +92,20 @@
                     android:textSize="14sp"
                     android:layout_marginBottom="4dp"/>
 
-                <LinearLayout
+                <EditText
+                    android:id="@+id/et_host"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="16dp">
-
-                    <EditText
-                        android:id="@+id/et_host"
-                        android:layout_width="0dp"
-                        android:layout_height="48dp"
-                        android:layout_weight="1"
-                        android:hint="host"
-                        android:inputType="text"
-                        android:textColor="@color/black"
-                        android:textColorHint="#666666"
-                        android:fontFamily="sans-serif"
-                        android:textSize="14sp"
-                        android:background="@android:color/white"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
-                        android:layout_marginEnd="8dp"/>
-
-                    <EditText
-                        android:id="@+id/et_port"
-                        android:layout_width="100dp"
-                        android:layout_height="48dp"
-                        android:hint="puerto"
-                        android:inputType="number"
-                        android:textColor="@color/black"
-                        android:textColorHint="#666666"
-                        android:fontFamily="sans-serif"
-                        android:textSize="14sp"
-                        android:background="@android:color/white"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"/>
-                </LinearLayout>
+                    android:layout_height="48dp"
+                    android:hint="host"
+                    android:inputType="text"
+                    android:textColor="@color/black"
+                    android:textColorHint="#666666"
+                    android:fontFamily="sans-serif"
+                    android:textSize="14sp"
+                    android:background="@android:color/white"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:layout_marginBottom="16dp"/>
 
                 <!-- Mensaje de error -->
                 <TextView
@@ -155,45 +133,6 @@
                     android:paddingEnd="32dp"
                     android:layout_marginTop="8dp"
                     android:layout_marginBottom="16dp"/>
-
-                <!-- Botones rápidos -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Configuraciones rápidas:"
-                    android:textColor="@color/black"
-                    android:fontFamily="sans-serif"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp"/>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/btn_local"
-                        android:layout_width="0dp"
-                        android:layout_height="40dp"
-                        android:layout_marginEnd="4dp"
-                        android:layout_weight="1"
-                        android:text="Emulador"
-                        android:textColor="@color/black"
-                        android:fontFamily="sans-serif"
-                        android:textSize="11sp"/>
-
-                    <Button
-                        android:id="@+id/btn_proxmox"
-                        android:layout_width="0dp"
-                        android:layout_height="40dp"
-                        android:layout_marginStart="4dp"
-                        android:layout_weight="1"
-                        android:text="Proxmox"
-                        android:textColor="@color/black"
-                        android:fontFamily="sans-serif"
-                        android:textSize="11sp"/>
-                </LinearLayout>
 
             </LinearLayout>
 
