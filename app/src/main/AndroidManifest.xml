@@ -43,6 +43,14 @@
             android:screenOrientation="landscape">
         </activity>
         
+        <!-- CountdownActivity para cuenta atrás antes del juego -->
+        <activity
+            android:name=".CountdownActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AppCompat.NoActionBar">
+        </activity>
+        
         <!-- MainActivity para el juego Ping Pong -->
         <activity
             android:name=".MainActivity"

@@ -383,7 +383,7 @@ class WaitingRoomActivity : AppCompatActivity() {
         handler.postDelayed({
             // Triple verificación antes de iniciar
             if (isConnectedToServer && player2Connected) {
-                val intent = Intent(this, MainActivity::class.java).apply {
+                val intent = Intent(this, CountdownActivity::class.java).apply {
                     putExtra("protocol", protocol)
                     putExtra("host", host)
                     putExtra("port", port)
