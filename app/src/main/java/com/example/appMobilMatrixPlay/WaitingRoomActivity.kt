@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.ProgressBar
@@ -14,6 +15,10 @@ import androidx.appcompat.app.AppCompatActivity
 import org.json.JSONObject
 
 class WaitingRoomActivity : AppCompatActivity() {
+
+    companion object {
+        private const val TAG = "WaitingRoomActivity"
+    }
 
     private lateinit var txtPlayer1Name: TextView
     private lateinit var txtPlayer2Name: TextView
@@ -33,6 +38,7 @@ class WaitingRoomActivity : AppCompatActivity() {
     private var player2Connected = false
     private var isConnectedToServer = false
     private var myColor: String = "rojo" 
+    private var player2Name: String = "" // Guardar nombre del jugador 2
     private val handler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -156,14 +162,50 @@ class WaitingRoomActivity : AppCompatActivity() {
     private fun handleServerMessage(message: String) {
         try {
             // Log del mensaje recibido para debug
-            runOnUiThread {
-                Toast.makeText(this, "Mensaje recibido: $message", Toast.LENGTH_SHORT).show()
-            }
+            Log.d(TAG, "📩 Mensaje recibido: $message")
             
             val json = JSONObject(message)
             val type = json.optString("type", "")
 
             when (type) {
+                "jocData" -> {
+                    // Datos del juego - extraer información de jugadores
+                    val jugadors = json.optJSONArray("Jugadors")
+                    Log.d(TAG, "🎮 jocData recibido - Jugadors: $jugadors")
+                    
+                    if (jugadors != null && jugadors.length() > 0) {
+                        runOnUiThread {
+                            // Primer jugador (nosotros)
+                            val jugador1 = jugadors.optString(0, playerName)
+                            txtPlayer1Name.text = jugador1
+                            player1Icon.setImageResource(R.drawable.rojo)
+                            
+                            // Verificar si hay segundo jugador
+                            if (jugadors.length() > 1) {
+                                val jugador2 = jugadors.getString(1)
+                                if (!player2Connected && jugador2.isNotEmpty()) {
+                                    player2Connected = true
+                                    player2Name = jugador2 // Guardar nombre del jugador 2
+                                    txtPlayer2Name.text = jugador2
+                                    txtPlayer2Name.visibility = View.VISIBLE
+                                    txtPlayer2Label.text = "NOM\nJUGADOR"
+                                    txtStatus.text = "¡Ambos jugadores conectados!"
+                                    loadingSpinner.visibility = View.GONE
+                                    
+                                    // Configurar iconos
+                                    player2Icon.setImageResource(R.drawable.negro)
+                                    
+                                    Log.d(TAG, "✅ Jugador 2 detectado: $jugador2")
+                                    Toast.makeText(this, "Jugador 2 conectado: $jugador2", Toast.LENGTH_SHORT).show()
+                                    
+                                    // Iniciar juego después de 3 segundos
+                                    startGameWithDelay()
+                                }
+                            }
+                        }
+                    }
+                }
+                
                 "colorAssignment" -> {
                     // El servidor nos asigna un color
                     myColor = json.optString("color", "rojo")
@@ -265,10 +307,8 @@ class WaitingRoomActivity : AppCompatActivity() {
                 }
                 
                 else -> {
-                    // Mostrar cualquier otro tipo de mensaje
-                    runOnUiThread {
-                        Toast.makeText(this, "Tipo: $type | Mensaje: $message", Toast.LENGTH_LONG).show()
-                    }
+                    // Log de mensajes desconocidos
+                    Log.d(TAG, "⚠️ Tipo desconocido: $type | Mensaje completo: $message")
                     
                     // Intentar extraer nombre de jugador de cualquier mensaje
                     val playerNameFromMsg = json.optString("playerName", "")
@@ -282,6 +322,8 @@ class WaitingRoomActivity : AppCompatActivity() {
                         name.isNotEmpty() && name != playerName -> name
                         else -> ""
                     }
+                    
+                    Log.d(TAG, "🔍 Buscando jugador 2 - Encontrado: '$otherPlayerName'")
                     
                     if (otherPlayerName.isNotEmpty() && !player2Connected) {
                         runOnUiThread {
@@ -304,7 +346,8 @@ class WaitingRoomActivity : AppCompatActivity() {
                                 player2Icon.setImageResource(R.drawable.rojo)
                             }
                             
-                            Toast.makeText(this, "Jugador 2 detectado: $otherPlayerName", Toast.LENGTH_LONG).show()
+                            Log.d(TAG, "✅ Jugador 2 detectado: $otherPlayerName")
+                            Toast.makeText(this, "Jugador 2: $otherPlayerName", Toast.LENGTH_SHORT).show()
                             startGameWithDelay()
                         }
                     }
@@ -312,8 +355,9 @@ class WaitingRoomActivity : AppCompatActivity() {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            Log.e(TAG, "❌ Error procesando mensaje: ${e.message}")
             runOnUiThread {
-                Toast.makeText(this, "Error procesando mensaje: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Error procesando mensaje", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -344,6 +388,8 @@ class WaitingRoomActivity : AppCompatActivity() {
                     putExtra("host", host)
                     putExtra("port", port)
                     putExtra("playerName", playerName)
+                    putExtra("player2Name", player2Name)
+                    putExtra("myColor", myColor)
                 }
                 startActivity(intent)
                 finish() // Cerrar WaitingRoomActivity
