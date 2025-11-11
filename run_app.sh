@@ -18,7 +18,7 @@ PACKAGE_NAME="com.example.appMobilMatrixPlay"
 ACTIVITY_NAME=".SplashActivity"
 
 echo -e "${BLUE}╔════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║   Ping Pong Online - Compilar y Ejecutar  ║${NC}"
+echo -e "${BLUE}║   Ping Pong Online - Compilar y Ejecutar   ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════╝${NC}"
 
 # Verificar dispositivo

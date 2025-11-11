@@ -36,6 +36,13 @@
             android:screenOrientation="landscape">
         </activity>
         
+        <!-- WaitingRoomActivity para sala de espera -->
+        <activity
+            android:name=".WaitingRoomActivity"
+            android:exported="false"
+            android:screenOrientation="landscape">
+        </activity>
+        
         <!-- MainActivity para el juego Ping Pong -->
         <activity
             android:name=".MainActivity"

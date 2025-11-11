@@ -12,6 +12,8 @@ class WebSocketClient(private val url: String) {
     private var webSocket: WebSocket? = null
     private val client = OkHttpClient.Builder()
         .readTimeout(0, TimeUnit.MILLISECONDS)
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .pingInterval(30, TimeUnit.SECONDS)
         .build()
     
     private val handler = Handler(Looper.getMainLooper())

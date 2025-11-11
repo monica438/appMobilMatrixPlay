@@ -31,15 +31,15 @@ class ConfigActivity : AppCompatActivity() {
     }
     
     private fun setupDefaultConfig() {
-        inputHost.setText("matrixplay4.ieticloudpro.ieti.cat")
+        inputHost.setText("matrixplay4.ieti.site")
         messageText.text = ""
     }
     
     private fun connectServer() {
         val playerName = inputPlayerName.text.toString()
         val host = inputHost.text.toString()
-        val protocol = "wss" // Protocolo fijo
-        val port = "443" // Puerto fijo para Proxmox
+        val protocol = "wss" // Protocolo WebSocket Secure (SSL)
+        val port = "443" // Puerto 443 con SSL
         
         if (playerName.isEmpty() || host.isEmpty()) {
             messageText.text = "Por favor, completa todos los campos"
@@ -48,8 +48,8 @@ class ConfigActivity : AppCompatActivity() {
         
         messageText.text = "Conectando..."
         
-        // pasar config a MainActivity
-        val intent = Intent(this, MainActivity::class.java).apply {
+        // pasar config a WaitingRoomActivity
+        val intent = Intent(this, WaitingRoomActivity::class.java).apply {
             putExtra("protocol", protocol)
             putExtra("host", host)
             putExtra("port", port)

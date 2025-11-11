@@ -76,24 +76,13 @@
                         android:padding="8dp">
 
                         <!-- Icono jugador 1 -->
-                        <androidx.cardview.widget.CardView
-                            android:id="@+id/player1_card"
+                        <ImageView
+                            android:id="@+id/player1_icon"
                             android:layout_width="80dp"
                             android:layout_height="80dp"
-                            app:cardCornerRadius="12dp"
-                            app:cardBackgroundColor="#FFB6C1"
-                            app:cardElevation="2dp">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:text="Icona\npersona"
-                                android:gravity="center"
-                                android:textColor="@color/black"
-                                android:fontFamily="sans-serif"
-                                android:textSize="12sp"
-                                android:textStyle="bold" />
-                        </androidx.cardview.widget.CardView>
+                            android:src="@drawable/gris"
+                            android:scaleType="fitCenter"
+                            android:contentDescription="Jugador 1" />
 
                         <!-- Nombre jugador 1 -->
                         <TextView
@@ -142,24 +131,13 @@
                         android:padding="8dp">
 
                         <!-- Icono jugador 2 -->
-                        <androidx.cardview.widget.CardView
-                            android:id="@+id/player2_card"
+                        <ImageView
+                            android:id="@+id/player2_icon"
                             android:layout_width="80dp"
                             android:layout_height="80dp"
-                            app:cardCornerRadius="12dp"
-                            app:cardBackgroundColor="#000000"
-                            app:cardElevation="2dp">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:text="Icona\npersona"
-                                android:gravity="center"
-                                android:textColor="@color/white"
-                                android:fontFamily="sans-serif"
-                                android:textSize="12sp"
-                                android:textStyle="bold" />
-                        </androidx.cardview.widget.CardView>
+                            android:src="@drawable/gris"
+                            android:scaleType="fitCenter"
+                            android:contentDescription="Jugador 2" />
 
                         <!-- Nombre jugador 2 -->
                         <TextView
