@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#dae8fc">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="16dp">
+
+        <!-- Header -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="120dp">
+
+            <TextView
+                android:id="@+id/loginTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LOGIN"
+                android:textSize="54sp"
+                android:layout_centerInParent="true"
+                android:fontFamily="sans-serif"
+                android:textStyle="bold"/>
+
+            <ImageView
+                android:id="@+id/loginImage"
+                android:layout_width="96dp"
+                android:layout_height="151dp"
+                android:src="@drawable/logopinpon"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentTop="true"
+                android:scaleType="fitCenter"/>
+
+        </RelativeLayout>
+
+        <!-- URL Field -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="URL"
+                android:textSize="14sp"
+                android:gravity="end"
+                android:paddingEnd="8dp"/>
+
+            <EditText
+                android:id="@+id/txtHost"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:hint="Introdueix l'URL del server aqui"
+                android:background="@drawable/edit_text_border"
+                android:padding="8dp"/>
+
+        </LinearLayout>
+
+        <!-- Username Field -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Nom"
+                android:textSize="14sp"
+                android:gravity="end"
+                android:paddingEnd="8dp"/>
+
+            <EditText
+                android:id="@+id/usernameText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:hint="Introdueix el teu nom aqui"
+                android:background="@drawable/edit_text_border"
+                android:padding="8dp"/>
+
+        </LinearLayout>
+
+        <!-- Connect Button -->
+        <Button
+            android:id="@+id/btnConnect"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:text="CONNECTA"
+            android:textColor="#000000"
+            android:background="@android:color/white"
+            android:layout_marginTop="16dp"
+            android:padding="12dp"/>
+
+        <!-- Message Label -->
+        <TextView
+            android:id="@+id/txtMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:layout_marginTop="16dp"
+            android:textColor="#000000"
+            android:textSize="14sp"/>
+
+    </LinearLayout>
+</ScrollView>
