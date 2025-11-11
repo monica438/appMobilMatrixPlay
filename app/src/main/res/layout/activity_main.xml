@@ -8,14 +8,72 @@
     android:background="@color/background_blue"
     tools:context=".MainActivity" >
 
-    <!-- Marcador Jugador Izquierdo (Rojo) -->
+    <!-- Área de juego Ping Pong (pantalla completa) -->
+    <FrameLayout
+        android:id="@+id/game_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+        
+        <!-- Logo semitransparente en el centro -->
+        <ImageView
+            android:id="@+id/background_logo"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:layout_gravity="center"
+            android:src="@drawable/logo"
+            android:scaleType="fitCenter"
+            android:alpha="0.15"
+            android:contentDescription="Logo de fondo" />
+        
+        <!-- Pala izquierda (Rojo) -->
+        <View
+            android:id="@+id/paddle_left"
+            android:layout_width="12dp"
+            android:layout_height="80dp"
+            android:layout_gravity="start|center_vertical"
+            android:layout_marginStart="20dp"
+            android:background="#FF0000" />
+        
+        <!-- Pala derecha (Negro) -->
+        <View
+            android:id="@+id/paddle_right"
+            android:layout_width="12dp"
+            android:layout_height="80dp"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="20dp"
+            android:background="#000000" />
+        
+        <!-- Pelota -->
+        <View
+            android:id="@+id/ball"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_gravity="center"
+            android:background="@drawable/circle_yellow" />
+        
+        <!-- Línea central punteada -->
+        <View
+            android:id="@+id/center_line"
+            android:layout_width="2dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal"
+            android:background="#888888"
+            android:alpha="0.3" />
+    </FrameLayout>
+
+    <!-- Marcador Jugador Izquierdo (Rojo) - Overlay superior izquierdo -->
     <LinearLayout
         android:id="@+id/player_left_info"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center"
-        android:padding="8dp"
+        android:padding="16dp"
+        android:background="#80DAE8FC"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_margin="16dp">
@@ -50,14 +108,15 @@
             android:layout_marginTop="4dp" />
     </LinearLayout>
 
-    <!-- Marcador Jugador Derecho (Negro) -->
+    <!-- Marcador Jugador Derecho (Negro) - Overlay superior derecho -->
     <LinearLayout
         android:id="@+id/player_right_info"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center"
-        android:padding="8dp"
+        android:padding="16dp"
+        android:background="#80DAE8FC"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_margin="16dp">
@@ -92,60 +151,7 @@
             android:layout_marginTop="4dp" />
     </LinearLayout>
 
-    <!-- Área de juego Ping Pong -->
-    <FrameLayout
-        android:id="@+id/game_container"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_margin="16dp"
-        app:layout_constraintTop_toBottomOf="@id/player_left_info"
-        app:layout_constraintBottom_toTopOf="@id/txt_status"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-        
-        <!-- Canvas del juego -->
-        <View
-            android:id="@+id/game_area"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#000000" />
-        
-        <!-- Pala izquierda (Rojo) -->
-        <View
-            android:id="@+id/paddle_left"
-            android:layout_width="12dp"
-            android:layout_height="80dp"
-            android:layout_gravity="start|center_vertical"
-            android:layout_marginStart="20dp"
-            android:background="#FF0000" />
-        
-        <!-- Pala derecha (Negro) -->
-        <View
-            android:id="@+id/paddle_right"
-            android:layout_width="12dp"
-            android:layout_height="80dp"
-            android:layout_gravity="end|center_vertical"
-            android:layout_marginEnd="20dp"
-            android:background="#FFFFFF" />
-        
-        <!-- Pelota -->
-        <View
-            android:id="@+id/ball"
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:layout_gravity="center"
-            android:background="@drawable/circle_yellow" />
-        
-        <!-- Línea central -->
-        <View
-            android:id="@+id/center_line"
-            android:layout_width="2dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center_horizontal"
-            android:background="#FFFFFF"
-            android:alpha="0.3" />
-    </FrameLayout>
-
+    <!-- Mensaje de estado - Overlay inferior centrado -->
     <TextView
         android:id="@+id/txt_status"
         android:layout_width="wrap_content"
@@ -154,6 +160,8 @@
         android:textColor="@color/black"
         android:fontFamily="sans-serif"
         android:textSize="14sp"
+        android:background="#80DAE8FC"
+        android:padding="8dp"
         android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"

@@ -2,6 +2,7 @@ package com.example.appMobilMatrixPlay
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
@@ -52,6 +53,9 @@ class MainActivity : AppCompatActivity() {
         paddleLeft = findViewById(R.id.paddle_left)
         paddleRight = findViewById(R.id.paddle_right)
         ball = findViewById(R.id.ball)
+        
+        // Inicializar la bola como blanca
+        updateBallColor("WHITE")
 
         // Obtener config del servidor
         val protocol = intent.getStringExtra("protocol") ?: "wss"
@@ -73,20 +77,54 @@ class MainActivity : AppCompatActivity() {
             playerLeftName.text = player2Name
         }
 
-        // Control táctil para mover la pala
-        gameContainer.setOnTouchListener { _, event ->
-            when (event.action) {
-                MotionEvent.ACTION_MOVE, MotionEvent.ACTION_DOWN -> {
-                    movePaddle(event.y)
-                    sendPaddlePosition(event.y)
-                    true
-                }
-                else -> false
-            }
-        }
-        
         // Conectar al servidor
         connectToServer("$protocol://$host:$port")
+    }
+    
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        return when (keyCode) {
+            KeyEvent.KEYCODE_VOLUME_UP -> {
+                movePaddleUp()
+                true
+            }
+            KeyEvent.KEYCODE_VOLUME_DOWN -> {
+                movePaddleDown()
+                true
+            }
+            else -> super.onKeyDown(keyCode, event)
+        }
+    }
+    
+    private fun movePaddleUp() {
+        val paddle = if (isLeftPlayer) paddleLeft else paddleRight
+        val containerHeight = gameContainer.height
+        val paddleHeight = paddle.height
+        
+        // Mover hacia arriba (incremento de 20dp)
+        val step = 20 * resources.displayMetrics.density
+        var newY = paddle.y - step
+        
+        // Limitar movimiento dentro del contenedor
+        if (newY < 0) newY = 0f
+        
+        paddle.y = newY
+        sendPaddlePosition(newY + paddleHeight / 2)
+    }
+    
+    private fun movePaddleDown() {
+        val paddle = if (isLeftPlayer) paddleLeft else paddleRight
+        val containerHeight = gameContainer.height
+        val paddleHeight = paddle.height
+        
+        // Mover hacia abajo (incremento de 20dp)
+        val step = 20 * resources.displayMetrics.density
+        var newY = paddle.y + step
+        
+        // Limitar movimiento dentro del contenedor
+        if (newY > containerHeight - paddleHeight) newY = (containerHeight - paddleHeight).toFloat()
+        
+        paddle.y = newY
+        sendPaddlePosition(newY + paddleHeight / 2)
     }
 
     private fun movePaddle(y: Float) {
@@ -155,6 +193,34 @@ class MainActivity : AppCompatActivity() {
             val type = json.optString("type", "")
             
             when (type) {
+                "jocData" -> {
+                    // Datos del juego - extraer información de la bola
+                    val objectsList = json.optJSONArray("objectsList")
+                    
+                    if (objectsList != null) {
+                        // Buscar el objeto de la bola (id="B0")
+                        for (i in 0 until objectsList.length()) {
+                            val obj = objectsList.getJSONObject(i)
+                            val id = obj.optString("id", "")
+                            
+                            if (id.startsWith("B")) {
+                                // Es la bola
+                                val ballColor = obj.optString("color", "WHITE")
+                                val ballX = obj.optInt("x", 4)
+                                val ballY = obj.optInt("y", 4)
+                                
+                                runOnUiThread {
+                                    updateBallColor(ballColor)
+                                    // Normalizar posición de la bola (0-7 a 0.0-1.0)
+                                    val normalizedX = ballX / 7f
+                                    val normalizedY = ballY / 7f
+                                    updateBallPosition(normalizedX, normalizedY)
+                                }
+                            }
+                        }
+                    }
+                }
+                
                 "gameStart" -> {
                     runOnUiThread {
                         txtStatus.text = "¡Juego iniciado!"
@@ -245,6 +311,24 @@ class MainActivity : AppCompatActivity() {
         
         ball.x = x
         ball.y = y
+    }
+    
+    private fun updateBallColor(color: String) {
+        val ballColor = when (color.uppercase()) {
+            "WHITE" -> android.graphics.Color.WHITE
+            "RED" -> android.graphics.Color.RED
+            "BLACK" -> android.graphics.Color.BLACK
+            "YELLOW" -> android.graphics.Color.YELLOW
+            "BLUE" -> android.graphics.Color.BLUE
+            "GREEN" -> android.graphics.Color.GREEN
+            else -> android.graphics.Color.WHITE
+        }
+        
+        // Crear un drawable circular con el color
+        val drawable = android.graphics.drawable.GradientDrawable()
+        drawable.shape = android.graphics.drawable.GradientDrawable.OVAL
+        drawable.setColor(ballColor)
+        ball.background = drawable
     }
     
     private fun updateOpponentPaddle(normalizedY: Float, isLeft: Boolean) {
