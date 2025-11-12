@@ -89,20 +89,41 @@ fi
 
 # Compilar
 echo -e "\n${BLUE}[3/5]${NC} Compilando APK..."
-./gradlew assembleDebug --no-daemon 2>&1 | grep -E "(BUILD|FAILED|error)" || echo -n ""
+
+# Asegurarnos de que gradlew existe y es ejecutable
+if [ ! -x "./gradlew" ]; then
+    if [ -f "./gradlew" ]; then
+        chmod +x ./gradlew || true
+    else
+        echo -e "${RED}✗ No se encontró ./gradlew en el directorio del proyecto.${NC}"
+        echo -e "${YELLOW}  → Asegúrate de ejecutar este script desde la raíz del repositorio.${NC}"
+        exit 1
+    fi
+fi
+
+# Ejecutar build y capturar código de salida
+./gradlew assembleDebug --no-daemon
+BUILD_EXIT=$?
+
+if [ $BUILD_EXIT -ne 0 ]; then
+    echo -e "${RED}✗ Error al compilar (gradle exit code: $BUILD_EXIT)${NC}"
+    exit $BUILD_EXIT
+fi
 
 if [ ! -f "$APK_PATH" ]; then
-    echo -e "${RED}✗ Error al compilar${NC}"
+    echo -e "${RED}✗ APK no encontrada en $APK_PATH después del build${NC}"
     exit 1
 fi
 echo -e "${GREEN}✓ APK compilado exitosamente${NC}"
 
 # Instalar
 echo -e "\n${BLUE}[4/5]${NC} Instalando en el dispositivo $SELECTED_DEVICE..."
-$ADB -s "$SELECTED_DEVICE" install -r "$APK_PATH" 2>&1 | tail -3
-if [ $? -ne 0 ]; then
-    echo -e "${RED}✗ Error al instalar${NC}"
-    exit 1
+INSTALL_OUTPUT=$($ADB -s "$SELECTED_DEVICE" install -r "$APK_PATH" 2>&1)
+INSTALL_EXIT=$?
+echo "$INSTALL_OUTPUT" | tail -n 10
+if [ $INSTALL_EXIT -ne 0 ]; then
+    echo -e "${RED}✗ Error al instalar (adb exit code: $INSTALL_EXIT)${NC}"
+    exit $INSTALL_EXIT
 fi
 echo -e "${GREEN}✓ App instalada${NC}"
 
@@ -126,4 +147,18 @@ echo
 if [[ $REPLY =~ ^[SsYy]$ ]]; then
     echo -e "\n${BLUE}Mostrando logs de $SELECTED_DEVICE (Ctrl+C para salir)...${NC}\n"
     $ADB -s "$SELECTED_DEVICE" logcat | grep --line-buffered -E "(appMobilMatrixPlay|AndroidRuntime|WebSocket|WaitingRoom|MainActivity)"
+fi
+
+# Lanzar scrcpy en primer plano (si está instalado). Ejecuta simplemente el binario scrcpy en la terminal.
+if command -v scrcpy >/dev/null 2>&1 || [ -x "/snap/bin/scrcpy" ]; then
+    if [ -x "/snap/bin/scrcpy" ]; then
+        SCRCPY_BIN="/snap/bin/scrcpy"
+    else
+        SCRCPY_BIN=$(command -v scrcpy)
+    fi
+    echo -e "\n${BLUE}Iniciando scrcpy (${SCRCPY_BIN}) para $SELECTED_DEVICE (en primer plano)...${NC}"
+    # Ejecutar scrcpy en primer plano (sin redirección ni background)
+    "$SCRCPY_BIN" -s "$SELECTED_DEVICE"
+else
+    echo -e "${YELLOW}⚠ scrcpy no está instalado. Instálalo o ejecútalo manualmente en otra terminal (ej. scrcpy -s $SELECTED_DEVICE)${NC}"
 fi
