@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import org.json.JSONObject
+import org.json.JSONArray
 
 class WaitingRoomActivity : AppCompatActivity() {
 
@@ -172,34 +173,49 @@ class WaitingRoomActivity : AppCompatActivity() {
                     // Datos del juego - extraer información de jugadores
                     val jugadors = json.optJSONArray("Jugadors")
                     Log.d(TAG, "🎮 jocData recibido - Jugadors: $jugadors")
-                    
+
                     if (jugadors != null && jugadors.length() > 0) {
                         runOnUiThread {
-                            // Primer jugador (nosotros)
-                            val jugador1 = jugadors.optString(0, playerName)
-                            txtPlayer1Name.text = jugador1
+                            // Asegurarse de mostrar nuestro propio nombre en la posición local
+                            txtPlayer1Name.text = playerName
                             player1Icon.setImageResource(R.drawable.rojo)
-                            
-                            // Verificar si hay segundo jugador
-                            if (jugadors.length() > 1) {
-                                val jugador2 = jugadors.getString(1)
-                                if (!player2Connected && jugador2.isNotEmpty()) {
+
+                            // Buscar el otro jugador en la lista y actualizar si es distinto
+                            var other: String? = null
+                            for (i in 0 until jugadors.length()) {
+                                val n = jugadors.optString(i, "")
+                                if (n.isNotEmpty() && n != playerName) {
+                                    other = n
+                                    break
+                                }
+                            }
+
+                            if (!other.isNullOrEmpty()) {
+                                if (!player2Connected) {
                                     player2Connected = true
-                                    player2Name = jugador2 // Guardar nombre del jugador 2
-                                    txtPlayer2Name.text = jugador2
+                                    player2Name = other
+                                    txtPlayer2Name.text = other
                                     txtPlayer2Name.visibility = View.VISIBLE
                                     txtPlayer2Label.text = "NOM\nJUGADOR"
                                     txtStatus.text = "Tots dos jugadors connectats!"
                                     loadingSpinner.visibility = View.GONE
-                                    
-                                    // Configurar iconos
-                                    player2Icon.setImageResource(R.drawable.negro)
-                                    
-                                    Log.d(TAG, "✅ Jugador 2 detectado: $jugador2")
-                                    Toast.makeText(this, "Jugador 2 connectat: $jugador2", Toast.LENGTH_SHORT).show()
-                                    
-                                    // Iniciar juego después de 3 segundos
+
+                                    // Configurar icono del jugador 2 según nuestro color
+                                    if (myColor == "rojo") {
+                                        player2Icon.setImageResource(R.drawable.negro)
+                                    } else {
+                                        player2Icon.setImageResource(R.drawable.rojo)
+                                    }
+
+                                    Log.d(TAG, "✅ Jugador 2 detectado: $other")
+                                    Toast.makeText(this, "Jugador 2 connectat: $other", Toast.LENGTH_SHORT).show()
                                     startGameWithDelay()
+                                } else {
+                                    // Si ya estaba marcado como conectado, solo actualizar el nombre si cambia
+                                    if (player2Name != other) {
+                                        player2Name = other
+                                        txtPlayer2Name.text = other
+                                    }
                                 }
                             }
                         }
@@ -238,23 +254,26 @@ class WaitingRoomActivity : AppCompatActivity() {
                                 finish()
                                 return@runOnUiThread
                             }
-                            
+
+                            // Asegurarse de mostrar nuestro nombre en la posición local
+                            txtPlayer1Name.text = playerName
+
                             // Marcar que el jugador 2 se ha conectado
                             player2Connected = true
+                            player2Name = senderName
                             txtPlayer2Name.text = senderName
                             txtPlayer2Name.visibility = View.VISIBLE
                             txtPlayer2Label.text = "NOM\nJUGADOR"
                             txtStatus.text = "Tots dos jugadors connectats!"
                             loadingSpinner.visibility = View.GONE
-                            
+
                             // Configurar icono del jugador 2 según nuestro color
-                            // Si somos rojos, el otro es negro. Si somos negros, el otro es rojo.
                             if (myColor == "rojo") {
                                 player2Icon.setImageResource(R.drawable.negro)
                             } else {
                                 player2Icon.setImageResource(R.drawable.rojo)
                             }
-                            
+
                             // Esperar 3 segundos y luego iniciar el juego
                             startGameWithDelay()
                         }
@@ -265,28 +284,38 @@ class WaitingRoomActivity : AppCompatActivity() {
                     // Mensaje alternativo para cuando un jugador se une
                     val joinedPlayerName = json.optString("playerName", "Jugador")
                     
-                    if (joinedPlayerName != playerName && !player2Connected) {
+                    if (joinedPlayerName != playerName) {
                         runOnUiThread {
                             if (!isConnectedToServer) {
                                 Toast.makeText(this, "Error: No connectat al servidor", Toast.LENGTH_SHORT).show()
                                 finish()
                                 return@runOnUiThread
                             }
-                            
-                            player2Connected = true
-                            txtPlayer2Name.text = joinedPlayerName
-                            txtPlayer2Name.visibility = View.VISIBLE
-                            txtPlayer2Label.text = "NOM\nJUGADOR"
-                            txtStatus.text = "Tots dos jugadors connectats!"
-                            loadingSpinner.visibility = View.GONE
-                            
-                            if (myColor == "rojo") {
-                                player2Icon.setImageResource(R.drawable.negro)
+
+                            // Evitar dobles entradas: si ya hay player2Connected y el nombre es distinto, actualizarlo
+                            if (!player2Connected) {
+                                player2Connected = true
+                                player2Name = joinedPlayerName
+                                txtPlayer2Name.text = joinedPlayerName
+                                txtPlayer2Name.visibility = View.VISIBLE
+                                txtPlayer2Label.text = "NOM\nJUGADOR"
+                                txtStatus.text = "Tots dos jugadors connectats!"
+                                loadingSpinner.visibility = View.GONE
+
+                                if (myColor == "rojo") {
+                                    player2Icon.setImageResource(R.drawable.negro)
+                                } else {
+                                    player2Icon.setImageResource(R.drawable.rojo)
+                                }
+
+                                startGameWithDelay()
                             } else {
-                                player2Icon.setImageResource(R.drawable.rojo)
+                                // Si estaba conectado, si el nombre difiere, actualizar la vista
+                                if (player2Name != joinedPlayerName) {
+                                    player2Name = joinedPlayerName
+                                    txtPlayer2Name.text = joinedPlayerName
+                                }
                             }
-                            
-                            startGameWithDelay()
                         }
                     }
                 }
