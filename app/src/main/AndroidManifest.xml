@@ -17,20 +17,45 @@
         android:theme="@style/Theme.appMobilMatrixPlay"
         android:usesCleartextTraffic="true">
         
-        <!-- ConfigActivity es la actividad de inicio -->
+        <!-- SplashActivity es la actividad de inicio con loading -->
         <activity
-            android:name=".ConfigActivity"
-            android:exported="true">
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AppCompat.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         
-        <!-- MainActivity para el juego -->
+        <!-- ConfigActivity para configuración del servidor -->
+        <activity
+            android:name=".ConfigActivity"
+            android:exported="false"
+            android:screenOrientation="landscape">
+        </activity>
+        
+        <!-- WaitingRoomActivity para sala de espera -->
+        <activity
+            android:name=".WaitingRoomActivity"
+            android:exported="false"
+            android:screenOrientation="landscape">
+        </activity>
+        
+        <!-- CountdownActivity para cuenta atrás antes del juego -->
+        <activity
+            android:name=".CountdownActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AppCompat.NoActionBar">
+        </activity>
+        
+        <!-- MainActivity para el juego Ping Pong -->
         <activity
             android:name=".MainActivity"
-            android:exported="false">
+            android:exported="false"
+            android:screenOrientation="landscape">
         </activity>
     </application>
 

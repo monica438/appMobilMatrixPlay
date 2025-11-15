@@ -1,8 +1,15 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.appMobilMatrixPlay" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <!-- Background color -->
+        <item name="android:windowBackground">@color/background_blue</item>
+        <item name="android:colorBackground">@color/background_blue</item>
+        <!-- Text color -->
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textColorPrimary">@color/black</item>
+        <item name="android:textColorSecondary">@color/black</item>
+        <!-- Font family (sans-serif is similar to Tahoma) -->
+        <item name="android:fontFamily">sans-serif</item>
     </style>
 
     <style name="Theme.appMobilMatrixPlay" parent="Base.Theme.appMobilMatrixPlay" />

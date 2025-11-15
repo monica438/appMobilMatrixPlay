@@ -6,12 +6,14 @@ import okhttp3.*
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
-// cliente websocket para conectar con el servidor
+// Cliente WebSocket para conectar con el servidor
 class WebSocketClient(private val url: String) {
     
     private var webSocket: WebSocket? = null
     private val client = OkHttpClient.Builder()
         .readTimeout(0, TimeUnit.MILLISECONDS)
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .pingInterval(30, TimeUnit.SECONDS)
         .build()
     
     private val handler = Handler(Looper.getMainLooper())
@@ -114,6 +116,6 @@ class WebSocketClient(private val url: String) {
     
     companion object {
         private const val TAG = "WebSocketClient"
-        private const val RECONNECT_DELAY = 5000L // 5 segs
+        private const val RECONNECT_DELAY = 5000L // 5 segundos
     }
 }

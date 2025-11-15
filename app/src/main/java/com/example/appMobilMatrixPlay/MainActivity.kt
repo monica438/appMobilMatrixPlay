@@ -1,137 +1,169 @@
 package com.example.appMobilMatrixPlay
 
-import android.graphics.Color
+import android.annotation.SuppressLint
 import android.os.Bundle
-import android.view.Gravity
-import android.widget.Button
+import android.view.KeyEvent
+import android.view.MotionEvent
+import android.view.View
 import android.widget.ImageView
-import android.widget.TableLayout
-import android.widget.TableRow
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
 
-    private val ROWS = 6
-    private val COLS = 7
-
-    // 0 = vacia, 1 = rojo, 2 = amarillo
-    private val board = Array(ROWS) { IntArray(COLS) { 0 } }
-    private val cells = Array(ROWS) { arrayOfNulls<ImageView>(COLS) }
-
-    private var currentPlayer = 1 // 1 rojo, 2 amarillo
-
-    private lateinit var table: TableLayout
-    private lateinit var colButtons: List<Button>
-    private lateinit var turnText: TextView
+    private lateinit var txtStatus: TextView
+    private lateinit var scoreLeft: TextView
+    private lateinit var scoreRight: TextView
+    private lateinit var playerLeftName: TextView
+    private lateinit var playerRightName: TextView
+    private lateinit var playerLeftIcon: ImageView
+    private lateinit var playerRightIcon: ImageView
     
-    // variables del websocket
+    private lateinit var gameContainer: View
+    private lateinit var paddleLeft: View
+    private lateinit var paddleRight: View
+    private lateinit var ball: View
+    
+    // Variables del websocket
     private var wsClient: WebSocketClient? = null
-    private var clientName: String = ""
-    private var clients: List<ClientData> = emptyList()
-    private var pieces: List<GameObject> = emptyList()
-    private var isMyTurn: Boolean = false
-    private var myRole: String? = null
-    private var serverHost: String = ""
+    private var playerName: String = ""
+    private var myColor: String = "rojo"
+    private var isLeftPlayer: Boolean = true
+    
+    private var leftScore: Int = 0
+    private var rightScore: Int = 0
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
 
-        table = findViewById(R.id.board_table)
-        turnText = findViewById(R.id.turnText)
-
-        // los 7 botones d las columnas
-        colButtons = listOf(
-            findViewById(R.id.btn_col_0),
-            findViewById(R.id.btn_col_1),
-            findViewById(R.id.btn_col_2),
-            findViewById(R.id.btn_col_3),
-            findViewById(R.id.btn_col_4),
-            findViewById(R.id.btn_col_5),
-            findViewById(R.id.btn_col_6)
-        )
-
-        createBoard()
-        setupButtons()
+        // Inicializar vistas
+        txtStatus = findViewById(R.id.txt_status)
+        scoreLeft = findViewById(R.id.score_left)
+        scoreRight = findViewById(R.id.score_right)
+        playerLeftName = findViewById(R.id.player_left_name)
+        playerRightName = findViewById(R.id.player_right_name)
+        playerLeftIcon = findViewById(R.id.player_left_icon)
+        playerRightIcon = findViewById(R.id.player_right_icon)
         
-        // obtener config del server
-    val protocol = intent.getStringExtra("protocol") ?: "ws"
-    val host = intent.getStringExtra("host") ?: "10.0.2.2"
-    val port = intent.getStringExtra("port") ?: "3000"
-    serverHost = host
+        gameContainer = findViewById(R.id.game_container)
+        paddleLeft = findViewById(R.id.paddle_left)
+        paddleRight = findViewById(R.id.paddle_right)
+        ball = findViewById(R.id.ball)
+        
+        // Inicializar la bola como blanca
+        updateBallColor("WHITE")
 
-    connectToServer("$protocol://$host:$port")
+        // Obtener configuración del servidor
+        val protocol = intent.getStringExtra("protocol") ?: "wss"
+        val host = intent.getStringExtra("host") ?: "matrixplay4.ieti.site"
+        val port = intent.getStringExtra("port") ?: "443"
+        playerName = intent.getStringExtra("playerName") ?: "Jugador"
+        val player2Name = intent.getStringExtra("player2Name") ?: "Esperant..."
+        myColor = intent.getStringExtra("myColor") ?: "rojo"
+        
+        // Determinar si somos el jugador izquierdo o derecho
+        isLeftPlayer = (myColor == "rojo")
+        
+        // Configurar nombres e iconos
+        if (isLeftPlayer) {
+            playerLeftName.text = playerName
+            playerRightName.text = player2Name
+        } else {
+            playerRightName.text = playerName
+            playerLeftName.text = player2Name
+        }
+
+        // Conectar al servidor
+        connectToServer("$protocol://$host:$port")
     }
-
-    private fun createBoard() {
-        val density = resources.displayMetrics.density
-        val sizePx = (48 * density).toInt()
-        val marginPx = (4 * density).toInt()
-
-        // iteramos cada fila
-        for (r in 0 until ROWS) {
-            val row = TableRow(this)
-            row.layoutParams = TableLayout.LayoutParams(
-                TableLayout.LayoutParams.MATCH_PARENT,
-                TableLayout.LayoutParams.WRAP_CONTENT
-            )
-            row.gravity = Gravity.CENTER
-
-            // añadimos las celdas
-            for (c in 0 until COLS) {
-                val img = ImageView(this)
-                val lp = TableRow.LayoutParams(sizePx, sizePx)
-                lp.setMargins(marginPx, marginPx, marginPx, marginPx)
-                img.layoutParams = lp
-                img.setImageResource(R.drawable.circle_empty) // circulo vacio
-                img.scaleType = ImageView.ScaleType.CENTER_INSIDE
-                row.addView(img)
-
-                cells[r][c] = img
-                board[r][c] = 0
+    
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        return when (keyCode) {
+            KeyEvent.KEYCODE_VOLUME_UP -> {
+                movePaddleUp()
+                true
             }
-
-            table.addView(row)
+            KeyEvent.KEYCODE_VOLUME_DOWN -> {
+                movePaddleDown()
+                true
+            }
+            else -> super.onKeyDown(keyCode, event)
         }
     }
-
-
-    // poner los botones para poner las fichas
-    private fun setupButtons() {
-        for (c in 0 until COLS) {
-            colButtons[c].setOnClickListener { 
-                if (isMyTurn) {
-                    sendPlay(c)
-                } else {
-                    Toast.makeText(this, "No es tu turno", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
+    
+    private fun movePaddleUp() {
+        val paddle = if (isLeftPlayer) paddleLeft else paddleRight
+        val containerHeight = gameContainer.height
+        val paddleHeight = paddle.height
+        
+        // Mover hacia arriba (incremento de 20dp)
+        val step = 20 * resources.displayMetrics.density
+        var newY = paddle.y - step
+        
+        // Limitar movimiento dentro del contenedor
+        if (newY < 0) newY = 0f
+        
+        paddle.y = newY
+        sendPaddlePosition(newY + paddleHeight / 2)
+    }
+    
+    private fun movePaddleDown() {
+        val paddle = if (isLeftPlayer) paddleLeft else paddleRight
+        val containerHeight = gameContainer.height
+        val paddleHeight = paddle.height
+        
+        // Mover hacia abajo (incremento de 20dp)
+        val step = 20 * resources.displayMetrics.density
+        var newY = paddle.y + step
+        
+        // Limitar movimiento dentro del contenedor
+        if (newY > containerHeight - paddleHeight) newY = (containerHeight - paddleHeight).toFloat()
+        
+        paddle.y = newY
+        sendPaddlePosition(newY + paddleHeight / 2)
     }
 
-    // Conectarse al server
+    private fun movePaddle(y: Float) {
+        val paddle = if (isLeftPlayer) paddleLeft else paddleRight
+        val containerHeight = gameContainer.height
+        val paddleHeight = paddle.height
+        
+        // Calcular nueva posición Y (centrada en el toque)
+        var newY = y - (paddleHeight / 2)
+        
+        // Limitar movimiento dentro del contenedor
+        if (newY < 0) newY = 0f
+        if (newY > containerHeight - paddleHeight) newY = (containerHeight - paddleHeight).toFloat()
+        
+        paddle.y = newY
+    }
+    
+    private fun sendPaddlePosition(y: Float) {
+        val containerHeight = gameContainer.height
+        // Normalizar posición (0.0 a 1.0)
+        val normalizedY = (y / containerHeight).toDouble()
+        
+        val json = JSONObject().apply {
+            put("type", "paddleMove")
+            put("player", myColor)
+            put("position", normalizedY)
+        }
+        wsClient?.sendJSON(json)
+    }
+
     private fun connectToServer(url: String) {
+        txtStatus.text = "Connectant..."
+        
         wsClient = WebSocketClient(url)
         
         wsClient?.onOpen {
             runOnUiThread {
-                Toast.makeText(this, "Conectado al servidor", Toast.LENGTH_SHORT).show()
-                // Enviar "hola" en broadcast solo si estamos conectados al servidor Proxmox
-                if (serverHost == "matrixplay4.ieticloudpro.ieti.cat") {
-                    sendBroadcastMessage("hola")
-                }
+                txtStatus.text = "Connectat - Esperant inici del joc..."
+                Toast.makeText(this, "Connectat al servidor", Toast.LENGTH_SHORT).show()
             }
         }
         
@@ -141,13 +173,14 @@ class MainActivity : AppCompatActivity() {
         
         wsClient?.onError { error ->
             runOnUiThread {
-                Toast.makeText(this, "Error: $error", Toast.LENGTH_SHORT).show()
+                txtStatus.text = "Error de connexió: $error"
+                Toast.makeText(this, "Error: $error", Toast.LENGTH_LONG).show()
             }
         }
         
         wsClient?.onClose {
             runOnUiThread {
-                Toast.makeText(this, "Desconectado del servidor", Toast.LENGTH_SHORT).show()
+                txtStatus.text = "Desconnectat del servidor"
             }
         }
         
@@ -157,206 +190,178 @@ class MainActivity : AppCompatActivity() {
     private fun handleServerMessage(message: String) {
         try {
             val json = JSONObject(message)
-            val type = json.getString("type")
+            val type = json.optString("type", "")
             
             when (type) {
-                "serverData" -> {
-                    clientName = json.getString("clientName")
+                "jocData" -> {
+                    // Datos del juego - extraer información de la bola
+                    val objectsList = json.optJSONArray("objectsList")
                     
-                    // parsear clientes
-                    val clientsArray = json.getJSONArray("clientsList")
-                    val clientsList = mutableListOf<ClientData>()
-                    for (i in 0 until clientsArray.length()) {
-                        clientsList.add(ClientData.fromJSON(clientsArray.getJSONObject(i)))
-                    }
-                    clients = clientsList
-                    
-                    // si solo hay 1 cliente esperamos
-                    if (clients.size < 2) {
-                        runOnUiThread {
-                            turnText.text = "Esperando otro jugador..."
-                            colButtons.forEach { it.isEnabled = false }
-                        }
-                        return
-                    }
-                    
-                    // parsear fichas
-                    val piecesArray = json.getJSONArray("objectsList")
-                    val piecesList = mutableListOf<GameObject>()
-                    for (i in 0 until piecesArray.length()) {
-                        val piece = GameObject.fromJSON(piecesArray.getJSONObject(i))
-                        piecesList.add(piece)
-                    }
-                    pieces = piecesList
-                    
-                    // obtener mi rol
-                    if (myRole == null) {
-                        myRole = clients.find { it.name == clientName }?.role
-                    }
-                    
-                    val currentTurn = json.optString("currentTurn", "")
-                    isMyTurn = myRole == currentTurn
-                    
-                    // actualizar tablero
-                    runOnUiThread {
-                        updateBoard()
-                        updateTurnText(currentTurn)
-                    }
-                    
-                    // verificar ganador
-                    val winner = json.optString("roundWinner", "")
-                    if (winner.isNotEmpty()) {
-                        runOnUiThread {
-                            val winnerName = clients.find { it.role == winner }?.name ?: winner
-                            showVictoryScreen(winnerName, winner == myRole)
+                    if (objectsList != null) {
+                        // Buscar el objeto de la bola (id="B0")
+                        for (i in 0 until objectsList.length()) {
+                            val obj = objectsList.getJSONObject(i)
+                            val id = obj.optString("id", "")
+                            
+                            if (id.startsWith("B")) {
+                                // Es la bola
+                                val ballColor = obj.optString("color", "WHITE")
+                                val ballX = obj.optInt("x", 4)
+                                val ballY = obj.optInt("y", 4)
+                                
+                                runOnUiThread {
+                                    updateBallColor(ballColor)
+                                    // Normalizar posición de la bola (0-7 a 0.0-1.0)
+                                    val normalizedX = ballX / 7f
+                                    val normalizedY = ballY / 7f
+                                    updateBallPosition(normalizedX, normalizedY)
+                                }
+                            }
                         }
                     }
                 }
                 
-                "countdown" -> {
-                    val value = json.getInt("value")
+                "gameStart" -> {
                     runOnUiThread {
-                        if (value == 0) {
-                            Toast.makeText(this, "¡Empieza el juego!", Toast.LENGTH_SHORT).show()
-                            turnText.text = "¡EMPIEZA!"
+                        txtStatus.text = "Joc iniciat!"
+                        Toast.makeText(this, "Comença el Ping Pong!", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                
+                "gameData", "gameUpdate" -> {
+                    // Actualizar posiciones de pelota y palas
+                    val ballX = json.optDouble("ballX", 0.5)
+                    val ballY = json.optDouble("ballY", 0.5)
+                    val leftPaddleY = json.optDouble("leftPaddleY", 0.5)
+                    val rightPaddleY = json.optDouble("rightPaddleY", 0.5)
+                    
+                    runOnUiThread {
+                        updateBallPosition(ballX.toFloat(), ballY.toFloat())
+                        if (!isLeftPlayer) {
+                            updateOpponentPaddle(leftPaddleY.toFloat(), true)
                         } else {
-                            turnText.text = "Empieza en: $value"
+                            updateOpponentPaddle(rightPaddleY.toFloat(), false)
+                        }
+                    }
+                }
+                
+                "score" -> {
+                    leftScore = json.optInt("leftScore", 0)
+                    rightScore = json.optInt("rightScore", 0)
+                    runOnUiThread {
+                        scoreLeft.text = leftScore.toString()
+                        scoreRight.text = rightScore.toString()
+                    }
+                }
+                
+                "paddleMove" -> {
+                    val player = json.optString("player", "")
+                    val position = json.optDouble("position", 0.5).toFloat()
+                    
+                    // Actualizar pala del oponente
+                    if ((player == "rojo" && !isLeftPlayer) || (player == "negro" && isLeftPlayer)) {
+                        runOnUiThread {
+                            updateOpponentPaddle(position, player == "rojo")
+                        }
+                    }
+                }
+                
+                "playerJoined" -> {
+                    val joinedPlayer = json.optString("playerName", "Jugador 2")
+                    runOnUiThread {
+                        if (isLeftPlayer) {
+                            playerRightName.text = joinedPlayer
+                        } else {
+                            playerLeftName.text = joinedPlayer
+                        }
+                        Toast.makeText(this, "$joinedPlayer s'ha unit", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                
+                "gameOver" -> {
+                    val winner = json.optString("winner", "")
+                    runOnUiThread {
+                        txtStatus.text = "Joc acabat"
+                        showGameOver(winner)
+                    }
+                }
+                
+                "broadcast" -> {
+                    val broadcastMessage = json.optString("message", "")
+                    val senderName = json.optString("senderName", "Jugador")
+                    if (broadcastMessage != "hola") {
+                        runOnUiThread {
+                            Toast.makeText(this, "$senderName: $broadcastMessage", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             }
         } catch (e: Exception) {
-            runOnUiThread {
-                Toast.makeText(this, "Error de comunicación con el servidor", Toast.LENGTH_SHORT).show()
-            }
+            e.printStackTrace()
         }
     }
     
-    private fun updateBoard() {
-        // limpiar tablero
-        for (r in 0 until ROWS) {
-            for (c in 0 until COLS) {
-                board[r][c] = 0
-                cells[r][c]?.setImageResource(R.drawable.circle_empty)
-            }
+    private fun updateBallPosition(normalizedX: Float, normalizedY: Float) {
+        val containerWidth = gameContainer.width
+        val containerHeight = gameContainer.height
+        
+        val ballSize = ball.width
+        val x = (normalizedX * containerWidth) - (ballSize / 2)
+        val y = (normalizedY * containerHeight) - (ballSize / 2)
+        
+        ball.x = x
+        ball.y = y
+    }
+    
+    private fun updateBallColor(color: String) {
+        val ballColor = when (color.uppercase()) {
+            "WHITE" -> android.graphics.Color.WHITE
+            "RED" -> android.graphics.Color.RED
+            "BLACK" -> android.graphics.Color.BLACK
+            "YELLOW" -> android.graphics.Color.YELLOW
+            "BLUE" -> android.graphics.Color.BLUE
+            "GREEN" -> android.graphics.Color.GREEN
+            else -> android.graphics.Color.WHITE
         }
         
-        var rendered = 0
+        // Crear un drawable circular con el color
+        val drawable = android.graphics.drawable.GradientDrawable()
+        drawable.shape = android.graphics.drawable.GradientDrawable.OVAL
+        drawable.setColor(ballColor)
+        ball.background = drawable
+    }
+    
+    private fun updateOpponentPaddle(normalizedY: Float, isLeft: Boolean) {
+        val paddle = if (isLeft) paddleLeft else paddleRight
+        val containerHeight = gameContainer.height
+        val paddleHeight = paddle.height
         
-        // dibujar todas las fichas
-        for (piece in pieces) {
-            if (piece.id.isEmpty()) continue
-            
-            // calcular posicion en el grid
-            val (row, col) = GameObject.calculateGridPosition(piece.x, piece.y)
-            
-            // solo renderizar fichas dentro del tablero
-            if (row >= 0 && row < ROWS && col >= 0 && col < COLS) {
-                val drawableRes = when {
-                    piece.id.startsWith("R_") -> {
-                        board[row][col] = 1
-                        R.drawable.circle_red
-                    }
-                    piece.id.startsWith("Y_") -> {
-                        board[row][col] = 2
-                        R.drawable.circle_yellow
-                    }
-                    else -> R.drawable.circle_empty
-                }
-                
-                cells[row][col]?.setImageResource(drawableRes)
-                rendered++
-            }
-        }
+        val y = (normalizedY * containerHeight) - (paddleHeight / 2)
+        paddle.y = y.coerceIn(0f, (containerHeight - paddleHeight).toFloat())
     }
 
-    // actualizar el texto del trno
-    private fun updateTurnText(currentTurn: String) {
-        val colorName = if (currentTurn == "R") "ROJO" else "AMARILLO"
-        val text = if (isMyTurn) {
-            "TU TURNO ($colorName)"
-        } else {
-            "TURNO: $colorName"
-        }
-        turnText.text = text
-        turnText.setTextColor(if (isMyTurn) Color.GREEN else Color.BLACK)
-        
-        // habilitar botones si hay 2 jugadores
-        if (clients.size >= 2) {
-            colButtons.forEach { it.isEnabled = true }
-        }
-    }
-
-    // enviar la jugada al server
-    private fun sendPlay(col: Int) {
-        // buscar ficha disponible de mi color q este fuera del tablero
-        val availablePiece = pieces.find { piece ->
-            if (piece.role != myRole) return@find false
-            
-            // calcular si esta dentro del tablero
-            val (row, calcCol) = GameObject.calculateGridPosition(piece.x, piece.y)
-            
-            // si esta fuera del tablero esta disponible
-            row == -1 || calcCol == -1
-        }
-        
-        if (availablePiece == null) {
-            Toast.makeText(this, "No tienes fichas disponibles", Toast.LENGTH_SHORT).show()
-            return
-        }
-        
-        // enviar al server
-        val msg = JSONObject().apply {
-            put("type", "clientPlay")
-            put("column", col)
-            put("pieceId", availablePiece.id)
-        }
-        
-        wsClient?.sendJSON(msg)
-    }
-
-    // enviar mensaje broadcast al server
-    private fun sendBroadcastMessage(message: String) {
-        val msg = JSONObject().apply {
-            put("type", "broadcast")
-            put("message", message)
-        }
-        wsClient?.sendJSON(msg)
-    }
-
-
-    // mostrar el mensaje de victoria
-    private fun showVictoryScreen(winnerName: String, didIWin: Boolean) {
-        // deshabilitar botones
-        disableAllButtons()
-        
-        // crear dialogo de victoria
+    private fun showGameOver(winner: String) {
         val builder = androidx.appcompat.app.AlertDialog.Builder(this)
         builder.setCancelable(false)
         
+        val didIWin = winner == playerName || 
+                      (winner == "rojo" && isLeftPlayer) ||
+                      (winner == "negro" && !isLeftPlayer)
+        
         val message = if (didIWin) {
-            "🎉 ¡FELICIDADES! 🎉\n\n¡Has ganado la partida!"
+            "🎉 FELICITATS! 🎉\n\nHas guanyat la partida!"
         } else {
-            "😔 Has perdido\n\n$winnerName ha ganado la partida"
+            "😔 Has perdut\n\nL'altre jugador ha guanyat"
         }
         
-        builder.setTitle(if (didIWin) "¡VICTORIA!" else "Derrota")
+        builder.setTitle(if (didIWin) "VICTÒRIA!" else "Derrota")
         builder.setMessage(message)
-        builder.setPositiveButton("Volver al Menú") { _, _ ->
-            // cerrar conexion websocket
+        builder.setPositiveButton("Tornar al Menú") { _, _ ->
             wsClient?.disconnect()
-            
-            // volver a ConfigActivity
             finish()
         }
         
-        val dialog = builder.create()
-        dialog.show()
-    }
-
-    // deshabilitar los botones
-    private fun disableAllButtons() {
-        colButtons.forEach { it.isEnabled = false }
+        builder.create().show()
     }
     
     override fun onDestroy() {
