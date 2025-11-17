@@ -40,20 +40,55 @@ class GestioMoviment(
         }
     }
     
-    // Para compatibilidad con touch events (llamado desde GameView)
+    // Para touch: mantener enviando la dirección mientras se arrastra
     private var lastY: Float = 0.5f
     
     fun handleTouchMove(normalizedY: Float) {
         val direction = when {
-            normalizedY < lastY - 0.05f -> "up"
-            normalizedY > lastY + 0.05f -> "down"   
-            else -> return // No enviar si el cambio es muy pequeño
+            normalizedY < lastY - 0.02f -> "up"
+            normalizedY > lastY + 0.02f -> "down"   
+            else -> "none"
         }
+        
         lastY = normalizedY
-        enviarDireccio(direction)
+        
+        // Si cambió la dirección, cancelar el envío anterior y empezar nuevo
+        if (direction != direccioActual) {
+            stopContinuousSend()
+            
+            if (direction != "none") {
+                // Enviar inmediatamente
+                enviarDireccio(direction)
+                
+                // Continuar enviando la misma dirección cada 50ms
+                startContinuousSend(direction)
+            } else {
+                enviarDireccio("none")
+            }
+        }
+    }
+    
+    private fun startContinuousSend(direction: String) {
+        continuousSendRunnable = object : Runnable {
+            override fun run() {
+                if (direccioActual == direction) {
+                    enviarDireccio(direction)
+                    handler.postDelayed(this, SEND_INTERVAL)
+                }
+            }
+        }
+        handler.postDelayed(continuousSendRunnable!!, SEND_INTERVAL)
+    }
+    
+    private fun stopContinuousSend() {
+        continuousSendRunnable?.let {
+            handler.removeCallbacks(it)
+            continuousSendRunnable = null
+        }
     }
     
     fun stopMovement() {
+        stopContinuousSend()
         if (direccioActual != "none") {
             direccioActual = "none"
             enviarDireccio("none")
