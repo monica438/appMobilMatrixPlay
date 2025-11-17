@@ -139,7 +139,9 @@ class WebSocketClient(private val url: String) {
     }
     
     fun sendJSON(json: JSONObject) {
-        send(json.toString())
+        val jsonString = json.toString()
+        Log.d(TAG, "📤 Enviando JSON: $jsonString")
+        send(jsonString)
     }
     
     fun disconnect() {

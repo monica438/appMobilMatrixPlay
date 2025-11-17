@@ -41,7 +41,6 @@ class MainActivity : AppCompatActivity() {
     private var rightScore: Int = 0
     
     private lateinit var gestioMoviment: GestioMoviment
-    private var lastTouchY: Float = 0.5f
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -111,8 +110,7 @@ class MainActivity : AppCompatActivity() {
         
         gameView.onPaddlePositionChanged = { normalizedY ->
             if (::gestioMoviment.isInitialized) {
-                gestioMoviment.handleTouchMove(normalizedY, lastTouchY)
-                lastTouchY = normalizedY
+                gestioMoviment.handleTouchMove(normalizedY)
             }
         }
         
@@ -163,10 +161,7 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 txtStatus.text = "Connectat - En joc"
                 wsClient?.let { ws ->
-                    gestioMoviment = GestioMoviment(ws, 
-                        { if (isLeftPlayer) gameView.leftPaddleY else gameView.rightPaddleY },
-                        { myServerColor }
-                    )
+                    gestioMoviment = GestioMoviment(ws)
                     Log.d(TAG, "✅ GestioMoviment inicializado con conexión existente")
                 }
             }
@@ -188,10 +183,7 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, "✅ Connectat al servidor", Toast.LENGTH_SHORT).show()
                     
                     wsClient?.let { ws ->
-                        gestioMoviment = GestioMoviment(ws, 
-                            { if (isLeftPlayer) gameView.leftPaddleY else gameView.rightPaddleY },
-                            { myServerColor }
-                        )
+                        gestioMoviment = GestioMoviment(ws)
                         MessageHandler.crearJugador(playerName, ws)
                     }
                 }
@@ -340,14 +332,22 @@ class MainActivity : AppCompatActivity() {
         val normalizedBallY = (result.ballY / 400.0).toFloat().coerceIn(0f, 1f)
         updateBallPosition(normalizedBallX, normalizedBallY)
         
-        // Actualizar palas - SIEMPRE desde el servidor
+        // Actualizar palas - SOLO actualizar la pala del RIVAL, no la mía
         val normalizedP1Y = (result.p1y / 400.0).toFloat().coerceIn(0f, 1f)
         val normalizedP2Y = (result.p2y / 400.0).toFloat().coerceIn(0f, 1f)
         
         Log.d(TAG, "🎮 Actualizando palas - P1Y raw: ${result.p1y}, normalized: $normalizedP1Y | P2Y raw: ${result.p2y}, normalized: $normalizedP2Y")
         
-        gameView.updateLeftPaddle(normalizedP1Y)
-        gameView.updateRightPaddle(normalizedP2Y)
+        // Solo actualizar la pala del rival, mantener la mía con control local
+        if (isLeftPlayer) {
+            // Soy jugador izquierdo (P1), solo actualizar P2 (rival)
+            gameView.updateRightPaddle(normalizedP2Y)
+            Log.d(TAG, "👤 Actualizando rival derecha: $normalizedP2Y")
+        } else {
+            // Soy jugador derecho (P2), solo actualizar P1 (rival)
+            gameView.updateLeftPaddle(normalizedP1Y)
+            Log.d(TAG, "👤 Actualizando rival izquierda: $normalizedP1Y")
+        }
         
         Log.d(TAG, "🎯 Estado actualizado - Bola: (${"%1.2f".format(normalizedBallX)}, ${"%1.2f".format(normalizedBallY)}), " +
                   "P1: ${"%1.2f".format(normalizedP1Y)}, P2: ${"%1.2f".format(normalizedP2Y)}")

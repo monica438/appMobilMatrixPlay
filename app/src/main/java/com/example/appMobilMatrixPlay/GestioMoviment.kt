@@ -6,50 +6,25 @@ import android.util.Log
 import org.json.JSONObject
 
 class GestioMoviment(
-    private val wsClient: WebSocketClient, 
-    private val getMyPaddleY: () -> Float,
-    private val getMyServerColor: () -> String
+    private val wsClient: WebSocketClient
 ) {
     
     companion object {
         private const val TAG = "GestioMoviment"
+        private const val SEND_INTERVAL = 50L // Enviar cada 50ms mientras se arrastra
     }
     
     private var direccioActual = "none"
     private val handler = Handler(Looper.getMainLooper())
-    private val throttleRunnable = Runnable { /* solo para throttling */ }
-    private var lastSendTime: Long = 0
-    private val THROTTLE_DELAY = 50L
+    private var continuousSendRunnable: Runnable? = null
     
     fun enviarDireccio(direccio: String) {
-        val currentTime = System.currentTimeMillis()
-        
-        if ((currentTime - lastSendTime) > THROTTLE_DELAY) {
-            direccioActual = direccio
-            
-            // Obtener la posición actual de mi pala (normalizada 0-1)
-            val normalizedY = getMyPaddleY()
-            // Convertir a coordenadas virtuales del servidor (0-400)
-            val serverY = (normalizedY * 400.0).toInt()
-            
-            // Obtener mi color del servidor (VERMELL o NEGRE)
-            val serverColor = getMyServerColor()
-            
-            val json = JSONObject().apply {
-                put("type", "move")
-                put("direction", direccio)
-                put("y", serverY)
-                put("color", serverColor)
-                put("timestamp", currentTime)
-            }
-            
-            wsClient.sendJSON(json)
-            lastSendTime = currentTime
-            Log.d(TAG, "📤 Movimiento enviado: $direccio, Y: $serverY, Color: $serverColor")
-            
-            handler.removeCallbacks(throttleRunnable)
-            handler.postDelayed(throttleRunnable, THROTTLE_DELAY)
-        }
+        direccioActual = direccio
+        val json = JSONObject()
+        json.put("type", "move")
+        json.put("direction", direccio)
+        wsClient.sendJSON(json)
+        Log.d(TAG, "📤 Enviando: type=move, direction=$direccio")
     }
     
     fun handleKeyEvent(isPressed: Boolean, isUp: Boolean) {
@@ -65,21 +40,17 @@ class GestioMoviment(
         }
     }
     
-    fun handleTouchMove(normalizedY: Float, previousY: Float) {
-        val delta = normalizedY - previousY
-        
-        val newDirection = when {
-            delta < -0.01f -> "up"
-            delta > 0.01f -> "down"
-            else -> "none"
+    // Para compatibilidad con touch events (llamado desde GameView)
+    private var lastY: Float = 0.5f
+    
+    fun handleTouchMove(normalizedY: Float) {
+        val direction = when {
+            normalizedY < lastY - 0.05f -> "up"
+            normalizedY > lastY + 0.05f -> "down"   
+            else -> return // No enviar si el cambio es muy pequeño
         }
-        
-        Log.d(TAG, "👆 handleTouchMove: normalizedY=$normalizedY, previousY=$previousY, delta=$delta, newDirection=$newDirection")
-        
-        if (newDirection != direccioActual) {
-            direccioActual = newDirection
-            enviarDireccio(newDirection)
-        }
+        lastY = normalizedY
+        enviarDireccio(direction)
     }
     
     fun stopMovement() {

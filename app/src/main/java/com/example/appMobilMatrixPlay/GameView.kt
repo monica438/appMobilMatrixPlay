@@ -211,57 +211,27 @@ class GameView @JvmOverloads constructor(
         // Guardar posición objetivo
         targetNormalizedY = normalizedY
 
-        // Actualizar la posición de mi pala visualmente
+        // Actualizar la posición de mi pala visualmente INMEDIATAMENTE
         if (isLeftPlayer) {
             leftPaddleY = normalizedY
         } else {
             rightPaddleY = normalizedY
         }
+        
+        // Notificar el cambio INMEDIATAMENTE
+        onPaddlePositionChanged?.invoke(normalizedY)
 
         // Redibujar
         invalidate()
     }
     
     private fun startSendingMovement() {
-        // Inicializar posición actual
-        currentNormalizedY = if (isLeftPlayer) leftPaddleY else rightPaddleY
-        
-        sendMovementRunnable = object : Runnable {
-            override fun run() {
-                // Calcular dirección basada en la diferencia entre actual y objetivo
-                val diff = targetNormalizedY - currentNormalizedY
-                
-                if (Math.abs(diff) > 0.01f) { // Threshold para evitar enviar mensajes innecesarios
-                    val direction = if (diff < 0) "up" else "down"
-                    
-                    // Enviar movimiento
-                    onPaddlePositionChanged?.invoke(targetNormalizedY)
-                    
-                    // Actualizar posición actual (simular movimiento incremental)
-                    val step = 0.02f // 8 píxeles / 400 píxeles ≈ 0.02
-                    currentNormalizedY = if (diff < 0) {
-                        (currentNormalizedY - step).coerceAtLeast(targetNormalizedY)
-                    } else {
-                        (currentNormalizedY + step).coerceAtMost(targetNormalizedY)
-                    }
-                    
-                    // Continuar enviando
-                    handler.postDelayed(this, 50) // Enviar cada 50ms
-                } else {
-                    // Ya llegamos al objetivo, detener
-                    currentNormalizedY = targetNormalizedY
-                }
-            }
-        }
-        
-        handler.post(sendMovementRunnable!!)
+        // Ya no necesitamos este sistema complejo de envío continuo
+        // El envío se hace inmediatamente en updatePaddlePosition con throttle en GestioMoviment
     }
     
     private fun stopSendingMovement() {
-        sendMovementRunnable?.let {
-            handler.removeCallbacks(it)
-        }
-        sendMovementRunnable = null
+        // No necesitamos limpiar nada ya que no hay runnable
     }
 
     fun setBallColor(color: Int) {
