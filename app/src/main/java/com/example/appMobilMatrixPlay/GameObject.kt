@@ -3,31 +3,53 @@ package com.example.appMobilMatrixPlay
 import org.json.JSONObject
 
 /**
- * Representa un objeto del juego (ficha, pelota, etc.)
+ * Representa un objeto del juego (pelota, palas, etc.)
+ * Estructura similar al proyecto de escritorio
  */
 data class GameObject(
     val id: String,
-    val x: Float,
-    val y: Float,
-    val role: String? = null
+    var x: Int,
+    var y: Int,
+    var ancho: Int,
+    var alto: Int,
+    var color: String
 ) {
     companion object {
-        fun fromJSON(json: JSONObject): GameObject {
+        // Dimensiones virtuales del servidor
+        const val VIRTUAL_WIDTH = 600f
+        const val VIRTUAL_HEIGHT = 400f
+        
+        fun fromJSON(json: JSONObject, containerWidth: Int, containerHeight: Int): GameObject {
+            val xLog = json.optInt("x", 0)
+            val yLog = json.optInt("y", 0)
+            val anchoLog = json.optInt("ancho", 1)
+            val altoLog = json.optInt("alto", 1)
+            
+            // Convertir de coordenadas lógicas (600x400) a coordenadas de pantalla
+            val xPix = ((xLog / VIRTUAL_WIDTH) * containerWidth).toInt()
+            val yPix = ((yLog / VIRTUAL_HEIGHT) * containerHeight).toInt()
+            val anchoPix = ((anchoLog / VIRTUAL_WIDTH) * containerWidth).toInt()
+            val altoPix = ((altoLog / VIRTUAL_HEIGHT) * containerHeight).toInt()
+            
             return GameObject(
                 id = json.optString("id", ""),
-                x = json.optDouble("x", 0.0).toFloat(),
-                y = json.optDouble("y", 0.0).toFloat(),
-                role = json.optString("role", null)
+                x = xPix,
+                y = yPix,
+                ancho = anchoPix,
+                alto = altoPix,
+                color = json.optString("color", "gray")
             )
         }
-        
-        fun calculateGridPosition(x: Float, y: Float): Pair<Int, Int> {
-            // Convertir coordenadas del servidor a posición en el grid
-            // Esto depende de cómo el servidor envíe las coordenadas
-            // Aquí asumimos que las coordenadas ya son del grid (0-5, 0-6)
-            val row = y.toInt()
-            val col = x.toInt()
-            return Pair(row, col)
+    }
+    
+    fun toJSON(): JSONObject {
+        return JSONObject().apply {
+            put("id", id)
+            put("x", x)
+            put("y", y)
+            put("ancho", ancho)
+            put("alto", alto)
+            put("color", color)
         }
     }
 }

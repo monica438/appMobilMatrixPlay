@@ -8,11 +8,12 @@
     android:background="@color/background_blue"
     tools:context=".MainActivity" >
 
-    <!-- Área de juego Ping Pong (pantalla completa) -->
+    <!-- Área de juego Ping Pong (4:4 centrado) -->
     <FrameLayout
         android:id="@+id/game_container"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -29,40 +30,11 @@
             android:alpha="0.15"
             android:contentDescription="Logo de fons" />
         
-        <!-- Pala izquierda (Rojo) -->
-        <View
-            android:id="@+id/paddle_left"
-            android:layout_width="12dp"
-            android:layout_height="80dp"
-            android:layout_gravity="start|center_vertical"
-            android:layout_marginStart="20dp"
-            android:background="#FF0000" />
-        
-        <!-- Pala dreta (Negre) -->
-        <View
-            android:id="@+id/paddle_right"
-            android:layout_width="12dp"
-            android:layout_height="80dp"
-            android:layout_gravity="end|center_vertical"
-            android:layout_marginEnd="20dp"
-            android:background="#000000" />
-        
-        <!-- Pilota -->
-        <View
-            android:id="@+id/ball"
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:layout_gravity="center"
-            android:background="@drawable/circle_yellow" />
-        
-        <!-- Línia central puntejada -->
-        <View
-            android:id="@+id/center_line"
-            android:layout_width="2dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center_horizontal"
-            android:background="#888888"
-            android:alpha="0.3" />
+        <!-- Vista personalizada del juego con Canvas -->
+        <com.example.appMobilMatrixPlay.GameView
+            android:id="@+id/game_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
     </FrameLayout>
 
     <!-- Marcador Jugador Esquerre (Vermell) - Overlay superior esquerre -->
