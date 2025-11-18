@@ -11,7 +11,7 @@ class GestioMoviment(
     
     companion object {
         private const val TAG = "GestioMoviment"
-        private const val SEND_INTERVAL = 50L // Enviar cada 50ms mientras se arrastra
+        private const val SEND_INTERVAL = 8L // Enviar cada 8ms (~120fps) para máxima velocidad
     }
     
     private var direccioActual = "none"
@@ -19,12 +19,21 @@ class GestioMoviment(
     private var continuousSendRunnable: Runnable? = null
     
     fun enviarDireccio(direccio: String) {
-        direccioActual = direccio
         val json = JSONObject()
         json.put("type", "move")
         json.put("direction", direccio)
         wsClient.sendJSON(json)
-        Log.d(TAG, "📤 Enviando: type=move, direction=$direccio")
+        // Log.d(TAG, "📤 Enviando: type=move, direction=$direccio")  // Demasiados logs
+    }
+    
+    fun enviarPosicion(normalizedY: Float) {
+        // Enviar posición Y actual al servidor
+        val y = (normalizedY * 400).toInt() // Convertir de 0-1 a 0-400
+        val json = JSONObject()
+        json.put("type", "position")
+        json.put("y", y)
+        wsClient.sendJSON(json)
+        Log.d(TAG, "📍 Enviando posición: y=$y (normalized=${"%.3f".format(normalizedY)})")
     }
     
     fun handleKeyEvent(isPressed: Boolean, isUp: Boolean) {
@@ -40,39 +49,22 @@ class GestioMoviment(
         }
     }
     
-    // Para touch: mantener enviando la dirección mientras se arrastra
+    // Para touch: enviar posición exacta
     private var lastY: Float = 0.5f
+    private var currentDirection: String = "none"
     
     fun handleTouchMove(normalizedY: Float) {
-        val direction = when {
-            normalizedY < lastY - 0.02f -> "up"
-            normalizedY > lastY + 0.02f -> "down"   
-            else -> "none"
-        }
+        // Enviar posición exacta al servidor (SIEMPRE)
+        enviarPosicion(normalizedY)
         
         lastY = normalizedY
-        
-        // Si cambió la dirección, cancelar el envío anterior y empezar nuevo
-        if (direction != direccioActual) {
-            stopContinuousSend()
-            
-            if (direction != "none") {
-                // Enviar inmediatamente
-                enviarDireccio(direction)
-                
-                // Continuar enviando la misma dirección cada 50ms
-                startContinuousSend(direction)
-            } else {
-                enviarDireccio("none")
-            }
-        }
     }
     
-    private fun startContinuousSend(direction: String) {
+    private fun startContinuousSend() {
         continuousSendRunnable = object : Runnable {
             override fun run() {
-                if (direccioActual == direction) {
-                    enviarDireccio(direction)
+                if (currentDirection != "none") {
+                    enviarDireccio(currentDirection)
                     handler.postDelayed(this, SEND_INTERVAL)
                 }
             }
@@ -88,12 +80,9 @@ class GestioMoviment(
     }
     
     fun stopMovement() {
-        stopContinuousSend()
-        if (direccioActual != "none") {
-            direccioActual = "none"
-            enviarDireccio("none")
-            Log.d(TAG, "⏹️ Movimiento detenido")
-        }
+        // Solo necesitamos enviar la última posición conocida
+        enviarPosicion(lastY)
+        Log.d(TAG, "⏹️ Movimiento detenido - Última posición: ${"%.3f".format(lastY)}")
     }
     
     fun getDireccionActual(): String = direccioActual

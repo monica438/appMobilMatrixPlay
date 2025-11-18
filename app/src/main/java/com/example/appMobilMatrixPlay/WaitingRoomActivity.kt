@@ -98,10 +98,10 @@ class WaitingRoomActivity : AppCompatActivity() {
                 // Timeout de seguridad
                 handler.postDelayed({
                     if (!player2Connected) {
-                        Log.d(TAG, "⏱️ Timeout: Iniciando modo prueba")
-                        startGameWithDelay()
+                        Log.d(TAG, "⏱️ Timeout: Aún esperando jugador 2...")
+                        txtStatus.text = "Esperant segon jugador..."
                     }
-                }, 10000)
+                }, 30000)
             }
         }
         
@@ -211,7 +211,7 @@ class WaitingRoomActivity : AppCompatActivity() {
 
                                 Log.d(TAG, "✅ Jugador 2 detectado: $joinedPlayerName, Mi color: $myColor")
                                 Toast.makeText(this, "Jugador 2 connectat: $joinedPlayerName", Toast.LENGTH_SHORT).show()
-                                startGameWithDelay()
+                                // Esperar countdown del servidor para iniciar
                             } else {
                                 if (player2Name != joinedPlayerName) {
                                     player2Name = joinedPlayerName
@@ -230,8 +230,18 @@ class WaitingRoomActivity : AppCompatActivity() {
                 
                 onCountdown = { count ->
                     runOnUiThread {
-                        txtStatus.text = "Iniciant en $count..."
-                        Toast.makeText(this, "Compte enrere: $count", Toast.LENGTH_SHORT).show()
+                        if (count > 0) {
+                            // Mostrar countdown del servidor
+                            txtStatus.text = "Iniciant en $count..."
+                            Log.d(TAG, "⏱️ Countdown del servidor: $count")
+                        } else {
+                            // count == 0 significa GO! - iniciar juego
+                            txtStatus.text = "GO!"
+                            Log.d(TAG, "🚀 Countdown completado - Iniciando juego")
+                            handler.postDelayed({
+                                startMainActivity()
+                            }, 500) // Pequeño delay para mostrar "GO!"
+                        }
                     }
                 }
             )
@@ -280,7 +290,7 @@ class WaitingRoomActivity : AppCompatActivity() {
                 player2Icon.setImageResource(if (myColor == "rojo") R.drawable.negro else R.drawable.rojo)
                 
                 Log.d(TAG, "✅ Jugador 2 conectado: $player2Name, Mi color: $myColor")
-                startGameWithDelay()
+                // El servidor enviará el countdown para iniciar
             }
         } else if (result.jugador1.isNotEmpty() && result.jugador1 != playerName) {
             // El otro jugador es jugador 1 y yo soy jugador 2
@@ -296,12 +306,12 @@ class WaitingRoomActivity : AppCompatActivity() {
                 player2Icon.setImageResource(if (myColor == "rojo") R.drawable.negro else R.drawable.rojo)
                 
                 Log.d(TAG, "✅ Jugador 1 detectado: $player2Name, Mi color: $myColor")
-                startGameWithDelay()
+                // El servidor enviará el countdown para iniciar
             }
         }
     }
 
-    private fun startGameWithDelay() {
+    private fun startMainActivity() {
         if (!isConnectedToServer) {
             runOnUiThread {
                 Toast.makeText(this, "No es pot iniciar: sense connexió", Toast.LENGTH_SHORT).show()
@@ -317,42 +327,31 @@ class WaitingRoomActivity : AppCompatActivity() {
             Log.d(TAG, "⚠️ Color no asignado, usando ROJO por defecto")
         }
         
-        val delayTime = if (player2Connected) 3000L else 5000L
-        
-        if (!player2Connected) {
-            runOnUiThread {
-                Toast.makeText(this, "⚠️ MODO DE PRUEBA: Iniciando sin jugador 2...", Toast.LENGTH_LONG).show()
-                player2Name = "Bot (IA)"
-            }
+        // Si no hay jugador 2, usar nombre por defecto
+        if (!player2Connected || player2Name.isEmpty()) {
+            player2Name = "Esperant..."
         }
         
         Log.d(TAG, "🚀 Iniciando juego - Mi color: $myColor, Jugador 2: $player2Name")
         
-        handler.postDelayed({
-            if (isConnectedToServer) {
-                // Marcar que estamos transfiriendo la conexión
-                isTransferringConnection = true
-                
-                // Transferir la conexión WebSocket existente a MainActivity
-                Log.d(TAG, "🔄 Transfiriendo conexión WebSocket a MainActivity")
-                MainActivity.setWebSocketClient(webSocketClient)
-                
-                val intent = Intent(this, MainActivity::class.java).apply {
-                    putExtra("protocol", protocol)
-                    putExtra("host", host)
-                    putExtra("port", port)
-                    putExtra("playerName", playerName)
-                    putExtra("player2Name", player2Name)
-                    putExtra("myColor", myColor)
-                    putExtra("reuseConnection", true)
-                }
-                startActivity(intent)
-                finish()
-            } else {
-                Toast.makeText(this, "Error: Connexió perduda", Toast.LENGTH_SHORT).show()
-                finish()
-            }
-        }, delayTime)
+        // Marcar que estamos transfiriendo la conexión
+        isTransferringConnection = true
+        
+        // Transferir la conexión WebSocket existente a MainActivity
+        Log.d(TAG, "🔄 Transfiriendo conexión WebSocket a MainActivity")
+        MainActivity.setWebSocketClient(webSocketClient)
+        
+        val intent = Intent(this, MainActivity::class.java).apply {
+            putExtra("protocol", protocol)
+            putExtra("host", host)
+            putExtra("port", port)
+            putExtra("playerName", playerName)
+            putExtra("player2Name", player2Name)
+            putExtra("myColor", myColor)
+            putExtra("reuseConnection", true)
+        }
+        startActivity(intent)
+        finish()
     }
 
     override fun onDestroy() {

@@ -254,4 +254,9 @@ class GameView @JvmOverloads constructor(
         rightPaddleY = y.coerceIn(0f, 1f)
         invalidate()
     }
+    
+    // Función para obtener la posición actual de mi pala
+    fun getMyPaddleY(): Float {
+        return if (isLeftPlayer) leftPaddleY else rightPaddleY
+    }
 }

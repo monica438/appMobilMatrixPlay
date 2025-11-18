@@ -2,6 +2,8 @@ package com.example.appMobilMatrixPlay
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.KeyEvent
 import android.widget.ImageView
@@ -167,9 +169,9 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             // Crear nueva conexión (modo legacy)
-            val protocol = intent.getStringExtra("protocol") ?: "wss"
-            val host = intent.getStringExtra("host") ?: "matrixplay4.ieti.site"
-            val port = intent.getStringExtra("port") ?: "443"
+            val protocol = intent.getStringExtra("protocol") ?: "ws"
+            val host = intent.getStringExtra("host") ?: "192.168.21.102"
+            val port = intent.getStringExtra("port") ?: "3000"
             val url = "$protocol://$host:$port"
             
             txtStatus.text = "Connectant..."
@@ -332,21 +334,28 @@ class MainActivity : AppCompatActivity() {
         val normalizedBallY = (result.ballY / 400.0).toFloat().coerceIn(0f, 1f)
         updateBallPosition(normalizedBallX, normalizedBallY)
         
-        // Actualizar palas - SOLO actualizar la pala del RIVAL, no la mía
+        // Actualizar palas
         val normalizedP1Y = (result.p1y / 400.0).toFloat().coerceIn(0f, 1f)
         val normalizedP2Y = (result.p2y / 400.0).toFloat().coerceIn(0f, 1f)
         
         Log.d(TAG, "🎮 Actualizando palas - P1Y raw: ${result.p1y}, normalized: $normalizedP1Y | P2Y raw: ${result.p2y}, normalized: $normalizedP2Y")
         
-        // Solo actualizar la pala del rival, mantener la mía con control local
         if (isLeftPlayer) {
-            // Soy jugador izquierdo (P1), solo actualizar P2 (rival)
+            // Soy jugador izquierdo (P1)
+            // Solo actualizar la pala del RIVAL (derecha)
             gameView.updateRightPaddle(normalizedP2Y)
-            Log.d(TAG, "👤 Actualizando rival derecha: $normalizedP2Y")
+            
+            // NO sincronizar mi propia pala - la controlo yo directamente
+            // Solo loguear para debug
+            Log.d(TAG, "👤 Mi pala (P1): Local=${gameView.leftPaddleY}, Server=$normalizedP1Y")
         } else {
-            // Soy jugador derecho (P2), solo actualizar P1 (rival)
+            // Soy jugador derecho (P2)
+            // Solo actualizar la pala del RIVAL (izquierda)
             gameView.updateLeftPaddle(normalizedP1Y)
-            Log.d(TAG, "👤 Actualizando rival izquierda: $normalizedP1Y")
+            
+            // NO sincronizar mi propia pala - la controlo yo directamente
+            // Solo loguear para debug
+            Log.d(TAG, "👤 Mi pala (P2): Local=${gameView.rightPaddleY}, Server=$normalizedP2Y")
         }
         
         Log.d(TAG, "🎯 Estado actualizado - Bola: (${"%1.2f".format(normalizedBallX)}, ${"%1.2f".format(normalizedBallY)}), " +

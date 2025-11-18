@@ -8,11 +8,12 @@
     android:background="@color/background_blue"
     tools:context=".MainActivity" >
 
-    <!-- Área de juego Ping Pong (pantalla completa) -->
+    <!-- Área de juego Ping Pong (4:4 centrado) -->
     <FrameLayout
         android:id="@+id/game_container"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
