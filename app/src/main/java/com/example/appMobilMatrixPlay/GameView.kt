@@ -85,7 +85,7 @@ class GameView @JvmOverloads constructor(
     var localIsLeftPlayer = true
     var showSlider = true
     private var isDraggingSlider = false
-    private val sliderWidth = 40f
+    private val sliderWidth = 45f
     private val sliderThumbRadius = 14f
     // Reducir la altura útil del slider para evitar la bandeja de notificaciones
     private val sliderVerticalInset = 48f
@@ -132,18 +132,26 @@ class GameView @JvmOverloads constructor(
 
     private fun drawLeftPaddle(canvas: Canvas) {
         val left = paddleMargin
-        val top = (height * leftPaddleY) - (paddleHeight / 2)
+
         val right = left + paddleWidth
-        val bottom = top + paddleHeight
+
+        // Calcular centro Y en pixeles y asegurarnos que la pala queda dentro de la pantalla
+        val centerY = (height * leftPaddleY).coerceIn(paddleHeight / 2f, height - paddleHeight / 2f)
+        val top = centerY - (paddleHeight / 2f)
+        val bottom = centerY + (paddleHeight / 2f)
 
         canvas.drawRect(left, top, right, bottom, paddleLeftPaint)
     }
 
     private fun drawRightPaddle(canvas: Canvas) {
         val right = width - paddleMargin
-        val top = (height * rightPaddleY) - (paddleHeight / 2)
+
         val left = right - paddleWidth
-        val bottom = top + paddleHeight
+
+        // Calcular centro Y en pixeles y asegurarnos que la pala queda dentro de la pantalla
+        val centerY = (height * rightPaddleY).coerceIn(paddleHeight / 2f, height - paddleHeight / 2f)
+        val top = centerY - (paddleHeight / 2f)
+        val bottom = centerY + (paddleHeight / 2f)
 
         canvas.drawRect(left, top, right, bottom, paddleRightPaint)
     }
@@ -164,7 +172,8 @@ class GameView @JvmOverloads constructor(
 
         // Thumb del slider
         val myPaddleY = if (localIsLeftPlayer) leftPaddleY else rightPaddleY
-        val thumbY = sliderTop + (sliderBottom - sliderTop) * myPaddleY
+        val edgeNormalized = centerToEdgeNormalized(myPaddleY)
+        val thumbY = sliderTop + edgeNormalized * (sliderBottom - sliderTop)
 
         // Cambiar color del thumb según el jugador
         sliderThumbPaint.color = if (localIsLeftPlayer) Color.RED else Color.BLACK
@@ -211,20 +220,26 @@ class GameView @JvmOverloads constructor(
 
     private fun updatePaddlePosition(touchY: Float, sliderTop: Float, sliderBottom: Float) {
         // Calcular posición normalizada (0-1)
-        val normalizedY = ((touchY - sliderTop) / (sliderBottom - sliderTop)).coerceIn(0f, 1f)
-        
-        // Guardar posición objetivo
-        targetNormalizedY = normalizedY
+        val normalizedInSlider = ((touchY - sliderTop) / (sliderBottom - sliderTop)).coerceIn(0f, 1f)
 
-        // Actualizar la posición de mi pala visualmente INMEDIATAMENTE
+        // Mapear edge-normalized (0..1) a center-normalized (0..1) para la pala
+        val centerNormalized = edgeToCenterNormalized(normalizedInSlider)
+
+        // Guardar posición objetivo (centro normalizado) y clamar dentro de los límites posibles
+        val minCenter = (paddleHeight / 2f) / height.toFloat()
+        val maxCenter = (height - paddleHeight / 2f) / height.toFloat()
+        val clampedCenter = centerNormalized.coerceIn(minCenter, maxCenter)
+
+        targetNormalizedY = clampedCenter
+
         if (localIsLeftPlayer) {
-            leftPaddleY = normalizedY
+            leftPaddleY = clampedCenter
         } else {
-            rightPaddleY = normalizedY
+            rightPaddleY = clampedCenter
         }
-        
-        // Notificar el cambio INMEDIATAMENTE
-        onPaddlePositionChanged?.invoke(normalizedY)
+
+        // Notificar el cambio INMEDIATAMENTE con edge-normalized (0..1) — lo que el servidor espera
+        onPaddlePositionChanged?.invoke(normalizedInSlider)
 
         // Redibujar
         invalidate()
@@ -282,6 +297,25 @@ class GameView @JvmOverloads constructor(
     fun updateRightPaddleFromServer(serverY: Int) {
         rightPaddleY = serverYToCenterNormalized(serverY)
         invalidate()
+    }
+
+    // Convierte edge-normalized (0..1, 0=top borde de la pala) a center-normalized (0..1)
+    private fun edgeToCenterNormalized(edge: Float): Float {
+        val e = edge.coerceIn(0f, 1f)
+        if (height <= 0) return e
+        val minCenter = (paddleHeight / 2f) / height.toFloat()
+        val maxCenter = (height - paddleHeight / 2f) / height.toFloat()
+        return (e * (maxCenter - minCenter) + minCenter).coerceIn(0f, 1f)
+    }
+
+    // Convierte center-normalized a edge-normalized (inversa)
+    private fun centerToEdgeNormalized(center: Float): Float {
+        if (height <= 0) return center.coerceIn(0f, 1f)
+        val minCenter = (paddleHeight / 2f) / height.toFloat()
+        val maxCenter = (height - paddleHeight / 2f) / height.toFloat()
+        val c = center.coerceIn(minCenter, maxCenter)
+        val denom = (maxCenter - minCenter).takeIf { it != 0f } ?: 1f
+        return ((c - minCenter) / denom).coerceIn(0f, 1f)
     }
 
     // Función para obtener la posición actual de mi pala
