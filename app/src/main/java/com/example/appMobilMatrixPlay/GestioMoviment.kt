@@ -27,13 +27,15 @@ class GestioMoviment(
     }
     
     fun enviarPosicion(normalizedY: Float) {
-        // Enviar posición Y actual al servidor
-        val y = (normalizedY * 400).toInt() // Convertir de 0-1 a 0-400
+        // Asegurar que la posición normalizada está en 0..1 y convertir a 0..400
+        val normalizedClamped = normalizedY.coerceIn(0f, 1f)
+        var y = (normalizedClamped * 400).toInt() // Convertir de 0-1 a 0-400
+        y = y.coerceIn(0, 400)
         val json = JSONObject()
         json.put("type", "position")
         json.put("y", y)
         wsClient.sendJSON(json)
-        Log.d(TAG, "📍 Enviando posición: y=$y (normalized=${"%.3f".format(normalizedY)})")
+        Log.d(TAG, "📍 Enviando posición: y=$y (normalized=${"%.3f".format(normalizedClamped)})")
     }
     
     fun handleKeyEvent(isPressed: Boolean, isUp: Boolean) {
@@ -55,9 +57,10 @@ class GestioMoviment(
     
     fun handleTouchMove(normalizedY: Float) {
         // Enviar posición exacta al servidor (SIEMPRE)
-        enviarPosicion(normalizedY)
-        
-        lastY = normalizedY
+        val clamped = normalizedY.coerceIn(0f, 1f)
+        enviarPosicion(clamped)
+
+        lastY = clamped
     }
     
     private fun startContinuousSend() {
@@ -81,8 +84,9 @@ class GestioMoviment(
     
     fun stopMovement() {
         // Solo necesitamos enviar la última posición conocida
-        enviarPosicion(lastY)
-        Log.d(TAG, "⏹️ Movimiento detenido - Última posición: ${"%.3f".format(lastY)}")
+        val clamped = lastY.coerceIn(0f, 1f)
+        enviarPosicion(clamped)
+        Log.d(TAG, "⏹️ Movimiento detenido - Última posición: ${"%.3f".format(clamped)}")
     }
     
     fun getDireccionActual(): String = direccioActual
