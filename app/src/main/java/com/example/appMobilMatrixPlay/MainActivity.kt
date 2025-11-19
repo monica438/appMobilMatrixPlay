@@ -342,28 +342,21 @@ class MainActivity : AppCompatActivity() {
         val normalizedBallY = (result.ballY / 400.0).toFloat().coerceIn(0f, 1f)
         updateBallPosition(normalizedBallX, normalizedBallY)
         
-        // Actualizar palas
+        // Actualizar palas usando coordenadas del servidor (0..400)
+        Log.d(TAG, "🎮 Actualizando palas - P1Y raw: ${result.p1y} | P2Y raw: ${result.p2y}")
+
+        // Para logs y comparaciones fáciles, calcular también la normalizada simple (0..1)
         val normalizedP1Y = (result.p1y / 400.0).toFloat().coerceIn(0f, 1f)
         val normalizedP2Y = (result.p2y / 400.0).toFloat().coerceIn(0f, 1f)
-        
-        Log.d(TAG, "🎮 Actualizando palas - P1Y raw: ${result.p1y}, normalized: $normalizedP1Y | P2Y raw: ${result.p2y}, normalized: $normalizedP2Y")
-        
+
         if (isLeftPlayer) {
-            // Soy jugador izquierdo (P1)
-            // Solo actualizar la pala del RIVAL (derecha)
-            gameView.updateRightPaddle(normalizedP2Y)
-            
-            // NO sincronizar mi propia pala - la controlo yo directamente
-            // Solo loguear para debug
-            Log.d(TAG, "👤 Mi pala (P1): Local=${gameView.leftPaddleY}, Server=$normalizedP1Y")
+            // Soy jugador izquierdo (P1): actualizar la pala del RIVAL (derecha) desde la coordenada del servidor
+            gameView.updateRightPaddleFromServer(result.p2y.toInt())
+            Log.d(TAG, "👤 Mi pala (P1) local: ${gameView.leftPaddleY}")
         } else {
-            // Soy jugador derecho (P2)
-            // Solo actualizar la pala del RIVAL (izquierda)
-            gameView.updateLeftPaddle(normalizedP1Y)
-            
-            // NO sincronizar mi propia pala - la controlo yo directamente
-            // Solo loguear para debug
-            Log.d(TAG, "👤 Mi pala (P2): Local=${gameView.rightPaddleY}, Server=$normalizedP2Y")
+            // Soy jugador derecho (P2): actualizar la pala del RIVAL (izquierda) desde la coordenada del servidor
+            gameView.updateLeftPaddleFromServer(result.p1y.toInt())
+            Log.d(TAG, "👤 Mi pala (P2) local: ${gameView.rightPaddleY}")
         }
         
         Log.d(TAG, "🎯 Estado actualizado - Bola: (${"%1.2f".format(normalizedBallX)}, ${"%1.2f".format(normalizedBallY)}), " +

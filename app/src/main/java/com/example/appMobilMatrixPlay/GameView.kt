@@ -66,7 +66,7 @@ class GameView @JvmOverloads constructor(
 
     // Posiciones y tamaños
     var paddleWidth = 12f
-    var paddleHeight = 80f
+    var paddleHeight = 160f
     var paddleMargin = 20f
     var ballSize = 16f
 
@@ -85,8 +85,10 @@ class GameView @JvmOverloads constructor(
     var localIsLeftPlayer = true
     var showSlider = true
     private var isDraggingSlider = false
-    private val sliderWidth = 60f
-    private val sliderThumbRadius = 20f
+    private val sliderWidth = 40f
+    private val sliderThumbRadius = 14f
+    // Reducir la altura útil del slider para evitar la bandeja de notificaciones
+    private val sliderVerticalInset = 48f
 
     // Callback para cuando cambia la posición del slider
     var onPaddlePositionChanged: ((Float) -> Unit)? = null
@@ -154,8 +156,8 @@ class GameView @JvmOverloads constructor(
 
     private fun drawSlider(canvas: Canvas) {
         val sliderX = if (localIsLeftPlayer) sliderWidth else width - sliderWidth
-        val sliderTop = paddleHeight / 2
-        val sliderBottom = height - paddleHeight / 2
+        val sliderTop = (paddleHeight / 2) + sliderVerticalInset
+        val sliderBottom = height - (paddleHeight / 2) - sliderVerticalInset
 
         // Línea del slider
         canvas.drawLine(sliderX, sliderTop, sliderX, sliderBottom, sliderPaint)
@@ -173,8 +175,8 @@ class GameView @JvmOverloads constructor(
         if (!showSlider) return super.onTouchEvent(event)
 
         val sliderX = if (localIsLeftPlayer) sliderWidth else width - sliderWidth
-        val sliderTop = paddleHeight / 2
-        val sliderBottom = height - paddleHeight / 2
+        val sliderTop = (paddleHeight / 2) + sliderVerticalInset
+        val sliderBottom = height - (paddleHeight / 2) - sliderVerticalInset
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
@@ -258,6 +260,30 @@ class GameView @JvmOverloads constructor(
         invalidate()
     }
     
+    // Mapea coordenada del servidor (0..400) a la posición central normalizada (0..1)
+    private fun serverYToCenterNormalized(serverY: Int): Float {
+        val edgeNormalized = (serverY / 400f).coerceIn(0f, 1f)
+        // Si el view aún no tiene tamaño, fallback simple
+        if (height <= 0) return edgeNormalized
+
+        val paddleH = paddleHeight
+        val minCenter = (paddleH / 2f) / height.toFloat()
+        val maxCenter = (height - paddleH / 2f) / height.toFloat()
+
+        val center = edgeNormalized * (maxCenter - minCenter) + minCenter
+        return center.coerceIn(0f, 1f)
+    }
+
+    fun updateLeftPaddleFromServer(serverY: Int) {
+        leftPaddleY = serverYToCenterNormalized(serverY)
+        invalidate()
+    }
+
+    fun updateRightPaddleFromServer(serverY: Int) {
+        rightPaddleY = serverYToCenterNormalized(serverY)
+        invalidate()
+    }
+
     // Función para obtener la posición actual de mi pala
     fun getMyPaddleY(): Float {
         return if (isLeftPlayer) leftPaddleY else rightPaddleY
