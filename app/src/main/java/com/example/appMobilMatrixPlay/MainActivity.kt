@@ -102,6 +102,7 @@ class MainActivity : AppCompatActivity() {
     
     private fun setupGameView() {
         gameView.isLeftPlayer = isLeftPlayer
+        gameView.localIsLeftPlayer = isLeftPlayer
         gameView.showSlider = true
         
         if (isLeftPlayer) {
@@ -313,16 +314,23 @@ class MainActivity : AppCompatActivity() {
         
         // Determinar mi posición actual y actualizar colores
         val nuevaPosicionIzquierda = result.soyJugador1
-        val nuevoMyColor = if (nuevaPosicionIzquierda) "RED" else "BLACK"
-        val nuevoServerColor = if (nuevaPosicionIzquierda) "VERMELL" else "NEGRE"
-        
-        // Actualizar siempre, no solo cuando cambia
-        if (isLeftPlayer != nuevaPosicionIzquierda || myColor != nuevoMyColor || myServerColor != nuevoServerColor) {
+
+        // Determinar el color que el servidor asigna a cada pala
+        val p1Color = result.p1Color.uppercase()
+        val p2Color = result.p2Color.uppercase()
+
+        // Color mío según el servidor
+        val myColorFromServer = if (result.soyJugador1) p1Color else p2Color
+
+        // Actualizar estado local si cambió
+        if (isLeftPlayer != nuevaPosicionIzquierda || myColor != myColorFromServer) {
             isLeftPlayer = nuevaPosicionIzquierda
-            myColor = nuevoMyColor
-            myServerColor = nuevoServerColor
+            myColor = myColorFromServer
+            // Indicar en la vista cuál es la pala local (la que tenga mi color)
+            val localIsLeft = p1Color.equals(myColor, ignoreCase = true)
             gameView.isLeftPlayer = isLeftPlayer
-            Log.d(TAG, "🔄 Actualización de posición/color: ${if (isLeftPlayer) "IZQUIERDA(RED/VERMELL)" else "DERECHA(BLACK/NEGRE)"}, ServerColor: $myServerColor")
+            gameView.localIsLeftPlayer = localIsLeft
+            Log.d(TAG, "🔄 Actualización: isLeftPlayer=$isLeftPlayer, myColor=$myColor, localIsLeft=$localIsLeft (P1=$p1Color, P2=$p2Color)")
         }
         
         // Actualizar iconos de jugadores

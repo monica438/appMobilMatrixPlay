@@ -79,7 +79,10 @@ class GameView @JvmOverloads constructor(
     var ballY = 0.5f
 
     // Control del slider
+    // Indica si la pala local es la izquierda. Separado de la información de juego
+    // que puede indicar qué pala es 'left' en el servidor.
     var isLeftPlayer = true
+    var localIsLeftPlayer = true
     var showSlider = true
     private var isDraggingSlider = false
     private val sliderWidth = 60f
@@ -150,7 +153,7 @@ class GameView @JvmOverloads constructor(
     }
 
     private fun drawSlider(canvas: Canvas) {
-        val sliderX = if (isLeftPlayer) sliderWidth else width - sliderWidth
+        val sliderX = if (localIsLeftPlayer) sliderWidth else width - sliderWidth
         val sliderTop = paddleHeight / 2
         val sliderBottom = height - paddleHeight / 2
 
@@ -158,18 +161,18 @@ class GameView @JvmOverloads constructor(
         canvas.drawLine(sliderX, sliderTop, sliderX, sliderBottom, sliderPaint)
 
         // Thumb del slider
-        val myPaddleY = if (isLeftPlayer) leftPaddleY else rightPaddleY
+        val myPaddleY = if (localIsLeftPlayer) leftPaddleY else rightPaddleY
         val thumbY = sliderTop + (sliderBottom - sliderTop) * myPaddleY
 
         // Cambiar color del thumb según el jugador
-        sliderThumbPaint.color = if (isLeftPlayer) Color.RED else Color.BLACK
+        sliderThumbPaint.color = if (localIsLeftPlayer) Color.RED else Color.BLACK
         canvas.drawCircle(sliderX, thumbY, sliderThumbRadius, sliderThumbPaint)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (!showSlider) return super.onTouchEvent(event)
 
-        val sliderX = if (isLeftPlayer) sliderWidth else width - sliderWidth
+        val sliderX = if (localIsLeftPlayer) sliderWidth else width - sliderWidth
         val sliderTop = paddleHeight / 2
         val sliderBottom = height - paddleHeight / 2
 
@@ -212,7 +215,7 @@ class GameView @JvmOverloads constructor(
         targetNormalizedY = normalizedY
 
         // Actualizar la posición de mi pala visualmente INMEDIATAMENTE
-        if (isLeftPlayer) {
+        if (localIsLeftPlayer) {
             leftPaddleY = normalizedY
         } else {
             rightPaddleY = normalizedY
