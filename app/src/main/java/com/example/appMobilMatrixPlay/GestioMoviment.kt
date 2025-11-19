@@ -35,7 +35,6 @@ class GestioMoviment(
         json.put("type", "position")
         json.put("y", y)
         wsClient.sendJSON(json)
-        Log.d(TAG, "📍 Enviando posición: y=$y (normalized=${"%.3f".format(normalizedClamped)})")
     }
     
     fun handleKeyEvent(isPressed: Boolean, isUp: Boolean) {

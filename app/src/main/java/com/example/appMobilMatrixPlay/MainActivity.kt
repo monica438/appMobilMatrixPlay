@@ -238,42 +238,6 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 
-                "gameStart" -> {
-                    runOnUiThread {
-                        txtStatus.text = "¡Juego iniciado!"
-                        Toast.makeText(this, "🚀 ¡Comienza el juego!", Toast.LENGTH_SHORT).show()
-                    }
-                }
-                
-                "score" -> {
-                    val leftScore = json.optInt("leftScore", 0)
-                    val rightScore = json.optInt("rightScore", 0)
-                    runOnUiThread {
-                        scoreLeft.text = leftScore.toString()
-                        scoreRight.text = rightScore.toString()
-                        Log.d(TAG, "📊 Score actualizado: $leftScore - $rightScore")
-                    }
-                }
-                
-                "gameOver" -> {
-                    val winner = json.optString("winner", "")
-                    runOnUiThread {
-                        showGameOver(winner)
-                    }
-                }
-                
-                "playerJoined" -> {
-                    val joinedPlayer = json.optString("playerName", "")
-                    runOnUiThread {
-                        if (isLeftPlayer) {
-                            playerRightName.text = joinedPlayer
-                        } else {
-                            playerLeftName.text = joinedPlayer
-                        }
-                        Toast.makeText(this, "👤 $joinedPlayer se unió", Toast.LENGTH_SHORT).show()
-                    }
-                }
-                
                 "error" -> {
                     val errorMsg = json.optString("value", "Error desconocido")
                     runOnUiThread {
@@ -390,50 +354,6 @@ class MainActivity : AppCompatActivity() {
         gameView.setBallColor(ballColor)
     }
     
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        return when (keyCode) {
-            KeyEvent.KEYCODE_VOLUME_UP -> {
-                movePaddleUp()
-                true
-            }
-            KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                movePaddleDown()
-                true
-            }
-            else -> super.onKeyDown(keyCode, event)
-        }
-    }
-    
-    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-        return when (keyCode) {
-            KeyEvent.KEYCODE_VOLUME_UP -> {
-                if (::gestioMoviment.isInitialized) {
-                    gestioMoviment.handleKeyEvent(isPressed = false, isUp = true)
-                }
-                true
-            }
-            KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                if (::gestioMoviment.isInitialized) {
-                    gestioMoviment.handleKeyEvent(isPressed = false, isUp = false)
-                }
-                true
-            }
-            else -> super.onKeyUp(keyCode, event)
-        }
-    }
-    
-    private fun movePaddleUp() {
-        if (::gestioMoviment.isInitialized) {
-            gestioMoviment.handleKeyEvent(isPressed = true, isUp = true)
-        }
-    }
-    
-    private fun movePaddleDown() {
-        if (::gestioMoviment.isInitialized) {
-            gestioMoviment.handleKeyEvent(isPressed = true, isUp = false)
-        }
-    }
-
     private fun showGameOver(winner: String) {
         val builder = androidx.appcompat.app.AlertDialog.Builder(this)
         builder.setCancelable(false)
