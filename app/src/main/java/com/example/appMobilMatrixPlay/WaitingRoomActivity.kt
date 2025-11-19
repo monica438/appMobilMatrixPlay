@@ -235,7 +235,6 @@ class WaitingRoomActivity : AppCompatActivity() {
                             txtStatus.text = "Iniciant en $count..."
                             Log.d(TAG, "⏱️ Countdown del servidor: $count")
                         } else {
-                            // count == 0 significa GO! - iniciar juego
                             txtStatus.text = "GO!"
                             Log.d(TAG, "🚀 Countdown completado - Iniciando juego")
                             handler.postDelayed({
