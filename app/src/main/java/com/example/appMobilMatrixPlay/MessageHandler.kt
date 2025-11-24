@@ -16,14 +16,19 @@ object MessageHandler {
         var jugador2: String = "",
         var soyJugador1: Boolean = true,
         var soyJugador2: Boolean = false,
-        var p1x: Double = 0.0,
-        var p1y: Double = 0.0,
+        var p1x: Double = 20.0,
+        var p1y: Double = 170.0,
+        var p1Width: Double = 15.0,
+        var p1Height: Double = 100.0,
         var p1Color: String = "RED",
-        var p2x: Double = 0.0,
-        var p2y: Double = 0.0,
+        var p2x: Double = 570.0,
+        var p2y: Double = 200.0,
+        var p2Width: Double = 15.0,
+        var p2Height: Double = 100.0,
         var p2Color: String = "BLACK",
-        var ballX: Double = 0.0,
-        var ballY: Double = 0.0,
+        var ballX: Double = 295.0,
+        var ballY: Double = 195.0,
+        var ballSize: Double = 22.0,
         var ballColor: String = "WHITE",
         var j1Punts: Int = 0,
         var j2Punts: Int = 0
@@ -189,16 +194,21 @@ object MessageHandler {
                         id.equals("P1", ignoreCase = true) -> {
                             result.p1x = obj.optDouble("x", 0.0)
                             result.p1y = obj.optDouble("y", 0.0)
+                            result.p1Width = obj.optDouble("ancho", 10.0)
+                            result.p1Height = obj.optDouble("alto", 60.0)
                             result.p1Color = obj.optString("color", "RED")
                         }
                         id.equals("P2", ignoreCase = true) -> {
                             result.p2x = obj.optDouble("x", 0.0)
                             result.p2y = obj.optDouble("y", 0.0)
+                            result.p2Width = obj.optDouble("ancho", 10.0)
+                            result.p2Height = obj.optDouble("alto", 60.0)
                             result.p2Color = obj.optString("color", "BLACK")
                         }
                         id.startsWith("B", ignoreCase = true) -> {
                             result.ballX = obj.optDouble("x", 0.0)
                             result.ballY = obj.optDouble("y", 0.0)
+                            result.ballSize = obj.optDouble("ancho", 10.0) // Asumimos que es cuadrada/circular
                             result.ballColor = obj.optString("color", "WHITE")
                         }
                     }

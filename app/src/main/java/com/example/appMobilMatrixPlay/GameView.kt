@@ -65,16 +65,37 @@ class GameView @JvmOverloads constructor(
     }
 
     // Posiciones y tamaños
-    var paddleWidth = 12f
-    var paddleHeight = 160f
-    var paddleMargin = 20f
-    var ballSize = 16f
+    var paddleWidth = 30f
+    var paddleHeight = 100f
+    var paddleMargin = 60f
+    var ballSize = 22f
+    
+    // Dimensiones del servidor
+    var serverVirtualHeight = 400f
+    var serverVirtualWidth = 600f
+    var serverPaddleHeight = 100f
+        set(value) {
+            field = value
+            updateDimensions()
+        }
+    var serverPaddleWidth = 15f
+        set(value) {
+            field = value
+            updateDimensions()
+        }
+    var serverBallSize = 22f
+        set(value) {
+            field = value
+            updateDimensions()
+        }
 
     // Posiciones de las palas (normalizado 0-1)
     var leftPaddleY = 0.5f
     var rightPaddleY = 0.5f
+    var leftPaddleX = 0.033f // Default P1 X (20/600)
+    var rightPaddleX = 0.95f // Default P2 X (570/600)
 
-    // Posición de la bola (normalizado 0-1)
+    // Posición de la bola (normalizado 0-1, Top-Left)
     var ballX = 0.5f
     var ballY = 0.5f
 
@@ -93,6 +114,20 @@ class GameView @JvmOverloads constructor(
     // Callback para cuando cambia la posición del slider
     var onPaddlePositionChanged: ((Float) -> Unit)? = null
     var onTouchReleased: (() -> Unit)? = null
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        updateDimensions()
+    }
+    
+    private fun updateDimensions() {
+        if (height > 0 && width > 0) {
+            paddleHeight = (serverPaddleHeight / serverVirtualHeight) * height
+            paddleWidth = (serverPaddleWidth / serverVirtualWidth) * width
+            ballSize = (serverBallSize / serverVirtualWidth) * width // Escalar bola con ancho para mantener proporción
+            invalidate()
+        }
+    }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
@@ -131,8 +166,8 @@ class GameView @JvmOverloads constructor(
     }
 
     private fun drawLeftPaddle(canvas: Canvas) {
-        val left = paddleMargin
-
+        // Usar posición X normalizada
+        val left = width * leftPaddleX
         val right = left + paddleWidth
 
         // Calcular centro Y en pixeles y asegurarnos que la pala queda dentro de la pantalla
@@ -144,9 +179,9 @@ class GameView @JvmOverloads constructor(
     }
 
     private fun drawRightPaddle(canvas: Canvas) {
-        val right = width - paddleMargin
-
-        val left = right - paddleWidth
+        // Usar posición X normalizada
+        val left = width * rightPaddleX
+        val right = left + paddleWidth
 
         // Calcular centro Y en pixeles y asegurarnos que la pala queda dentro de la pantalla
         val centerY = (height * rightPaddleY).coerceIn(paddleHeight / 2f, height - paddleHeight / 2f)
@@ -157,9 +192,16 @@ class GameView @JvmOverloads constructor(
     }
 
     private fun drawBall(canvas: Canvas) {
-        val centerX = width * ballX
-        val centerY = height * ballY
-        canvas.drawCircle(centerX, centerY, ballSize / 2, ballPaint)
+        // ballX y ballY son coordenadas Top-Left normalizadas
+        val left = width * ballX
+        val top = height * ballY
+        
+        // drawCircle dibuja desde el centro, así que desplazamos
+        val radius = ballSize / 2f
+        val centerX = left + radius
+        val centerY = top + radius
+        
+        canvas.drawCircle(centerX, centerY, radius, ballPaint)
     }
 
     private fun drawSlider(canvas: Canvas) {
@@ -238,8 +280,13 @@ class GameView @JvmOverloads constructor(
             rightPaddleY = clampedCenter
         }
 
-        // Notificar el cambio INMEDIATAMENTE con edge-normalized (0..1) — lo que el servidor espera
-        onPaddlePositionChanged?.invoke(normalizedInSlider)
+        // Calcular posición Y para el servidor (Top-Left en coordenadas 0..400)
+        // normalizedInSlider 0 -> Top (0)
+        // normalizedInSlider 1 -> Bottom (400 - serverPaddleHeight)
+        val serverY = normalizedInSlider * (serverVirtualHeight - serverPaddleHeight)
+
+        // Notificar el cambio con la coordenada Y del servidor
+        onPaddlePositionChanged?.invoke(serverY)
 
         // Redibujar
         invalidate()
@@ -275,18 +322,12 @@ class GameView @JvmOverloads constructor(
         invalidate()
     }
     
-    // Mapea coordenada del servidor (0..400) a la posición central normalizada (0..1)
+    // Mapea coordenada del servidor (0..400, Top-Left) a la posición central normalizada (0..1)
     private fun serverYToCenterNormalized(serverY: Int): Float {
-        val edgeNormalized = (serverY / 400f).coerceIn(0f, 1f)
-        // Si el view aún no tiene tamaño, fallback simple
-        if (height <= 0) return edgeNormalized
-
-        val paddleH = paddleHeight
-        val minCenter = (paddleH / 2f) / height.toFloat()
-        val maxCenter = (height - paddleH / 2f) / height.toFloat()
-
-        val center = edgeNormalized * (maxCenter - minCenter) + minCenter
-        return center.coerceIn(0f, 1f)
+        // CenterY en servidor = serverY + serverPaddleHeight / 2
+        val centerYServer = serverY + serverPaddleHeight / 2f
+        val centerNormalized = centerYServer / serverVirtualHeight
+        return centerNormalized.coerceIn(0f, 1f)
     }
 
     fun updateLeftPaddleFromServer(serverY: Int) {

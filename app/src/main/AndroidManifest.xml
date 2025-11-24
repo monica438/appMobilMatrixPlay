@@ -57,6 +57,14 @@
             android:exported="false"
             android:screenOrientation="landscape">
         </activity>
+
+        <!-- GameOverActivity para mostrar resultado final -->
+        <activity
+            android:name=".GameOverActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AppCompat.NoActionBar">
+        </activity>
     </application>
 
 </manifest>

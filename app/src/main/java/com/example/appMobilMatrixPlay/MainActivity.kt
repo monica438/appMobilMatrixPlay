@@ -306,8 +306,29 @@ class MainActivity : AppCompatActivity() {
         val normalizedBallY = (result.ballY / 400.0).toFloat().coerceIn(0f, 1f)
         updateBallPosition(normalizedBallX, normalizedBallY)
         
+        // Actualizar tamaño de la bola si viene del servidor
+        // if (result.ballSize > 0) {
+        //    gameView.ballSize = result.ballSize.toFloat()
+        // }
+
         // Actualizar palas usando coordenadas del servidor (0..400)
         Log.d(TAG, "🎮 Actualizando palas - P1Y raw: ${result.p1y} | P2Y raw: ${result.p2y}")
+        
+        // Actualizar dimensiones de las palas si vienen del servidor
+        // Usamos las dimensiones de P1 como referencia (asumiendo simetría)
+        if (result.p1Height > 0) {
+            gameView.serverPaddleHeight = result.p1Height.toFloat()
+            gameView.serverPaddleWidth = result.p1Width.toFloat()
+            
+            // Actualizar posiciones X normalizadas
+            gameView.leftPaddleX = (result.p1x / 600.0).toFloat()
+            gameView.rightPaddleX = (result.p2x / 600.0).toFloat()
+        }
+        
+        // Actualizar tamaño de la bola si viene del servidor
+        if (result.ballSize > 0) {
+            gameView.serverBallSize = result.ballSize.toFloat()
+        }
 
         // Para logs y comparaciones fáciles, calcular también la normalizada simple (0..1)
         val normalizedP1Y = (result.p1y / 400.0).toFloat().coerceIn(0f, 1f)
@@ -355,27 +376,18 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun showGameOver(winner: String) {
-        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
-        builder.setCancelable(false)
-        
         val didIWin = winner == playerName || 
                       (winner.uppercase() == "RED" && isLeftPlayer) ||
                       (winner == "negro" && !isLeftPlayer)
         
-        val message = if (didIWin) {
-            "🎉 ¡FELICIDADES! 🎉\n\n¡Has ganado la partida!"
-        } else {
-            "😔 Has perdido\n\nEl otro jugador ha ganado"
-        }
+        // Desconectar del servidor
+        wsClient?.disconnect()
         
-        builder.setTitle(if (didIWin) "¡VICTORIA!" else "Derrota")
-        builder.setMessage(message)
-        builder.setPositiveButton("Volver al Menú") { _, _ ->
-            wsClient?.disconnect()
-            finish()
-        }
-        
-        builder.create().show()
+        // Abrir actividad de Game Over
+        val intent = android.content.Intent(this, GameOverActivity::class.java)
+        intent.putExtra("didWin", didIWin)
+        startActivity(intent)
+        finish()
     }
     
     override fun onDestroy() {
