@@ -222,6 +222,30 @@ class MainActivity : AppCompatActivity() {
             Log.d(TAG, "📩 Mensaje - Type: $type")
             
             when (type) {
+                "RegistreOk" -> {
+                    val color = json.optString("color", "VERMELL")
+                    Log.d(TAG, "✅ RegistreOk - Color asignado: $color")
+                    
+                    // Asignar lado basado en el color recibido del servidor
+                    // VERMELL -> P1 (Izquierda)
+                    // NEGRE -> P2 (Derecha)
+                    val isLeft = color.equals("VERMELL", ignoreCase = true)
+                    
+                    runOnUiThread {
+                        isLeftPlayer = isLeft
+                        myColor = if (isLeft) "RED" else "BLACK"
+                        myServerColor = color
+                        
+                        gameView.isLeftPlayer = isLeftPlayer
+                        gameView.localIsLeftPlayer = isLeftPlayer
+                        
+                        // Actualizar iconos inmediatamente
+                        updatePlayerIcons()
+                        
+                        Log.d(TAG, "👤 Identidad confirmada: ${if(isLeft) "P1 (Izquierda/Rojo)" else "P2 (Derecha/Negro)"}")
+                    }
+                }
+
                 "broadcastHola" -> {
                     val value = json.optString("value", "")
                     runOnUiThread {
@@ -264,39 +288,56 @@ class MainActivity : AppCompatActivity() {
     private fun updateGameState(result: MessageHandler.JocDataResult) {
         Log.d(TAG, "📥 updateGameState llamado - J1: ${result.jugador1}, J2: ${result.jugador2}")
         
-        // Actualizar nombres - solo si el servidor envía un nombre válido
-        if (result.jugador1.isNotEmpty()) {
-            playerLeftName.text = result.jugador1
+        // Lógica robusta para asignar nombres basada en mi identidad confirmada (isLeftPlayer)
+        // El servidor envía una lista de nombres en 'Jugadors' sin orden garantizado.
+        // Debemos encontrar cuál es el mío y cuál es el del rival.
+        
+        var myName = playerName
+        var opponentName = "Esperant..."
+        
+        // Buscar nombre del oponente en la lista recibida
+        // Si result.jugador1 o result.jugador2 contienen nombres, usarlos para deducir
+        val names = mutableListOf<String>()
+        if (result.jugador1.isNotEmpty()) names.add(result.jugador1)
+        if (result.jugador2.isNotEmpty()) names.add(result.jugador2)
+        
+        for (name in names) {
+            if (name != playerName) {
+                opponentName = name
+                break
+            }
         }
-        if (result.jugador2.isNotEmpty()) {
-            playerRightName.text = result.jugador2
+        
+        // Asignar nombres a los TextViews según mi lado
+        if (isLeftPlayer) {
+            // Soy P1 (Izquierda)
+            playerLeftName.text = myName
+            playerRightName.text = opponentName
+        } else {
+            // Soy P2 (Derecha)
+            playerRightName.text = myName
+            playerLeftName.text = opponentName
         }
         
         // Actualizar puntuaciones
+        // J1Punts siempre es P1 (Izquierda/Rojo)
+        // J2Punts siempre es P2 (Derecha/Negro)
         scoreLeft.text = result.j1Punts.toString()
         scoreRight.text = result.j2Punts.toString()
         
-        // Determinar mi posición actual y actualizar colores
-        val nuevaPosicionIzquierda = result.soyJugador1
-
-        // Determinar el color que el servidor asigna a cada pala
-        val p1Color = result.p1Color.uppercase()
-        val p2Color = result.p2Color.uppercase()
-
-        // Color mío según el servidor
-        val myColorFromServer = if (result.soyJugador1) p1Color else p2Color
-
-        // Actualizar estado local si cambió
-        if (isLeftPlayer != nuevaPosicionIzquierda || myColor != myColorFromServer) {
-            isLeftPlayer = nuevaPosicionIzquierda
-            myColor = myColorFromServer
-            // Indicar en la vista cuál es la pala local (la que tenga mi color)
-            val localIsLeft = p1Color.equals(myColor, ignoreCase = true)
-            gameView.isLeftPlayer = isLeftPlayer
-            gameView.localIsLeftPlayer = localIsLeft
-            Log.d(TAG, "🔄 Actualización: isLeftPlayer=$isLeftPlayer, myColor=$myColor, localIsLeft=$localIsLeft (P1=$p1Color, P2=$p2Color)")
-        }
+        // Guardar puntuaciones locales para lógica de GameOver
+        leftScore = result.j1Punts
+        rightScore = result.j2Punts
         
+        // Determinar el color que el servidor asigna a cada pala
+        val p1Color = result.p1Color.ifEmpty { "RED" }.uppercase()
+        val p2Color = result.p2Color.ifEmpty { "BLACK" }.uppercase()
+
+        // Actualizar colores en la vista
+        val p1ColorInt = parseColor(p1Color)
+        val p2ColorInt = parseColor(p2Color)
+        gameView.setPaddleColors(p1ColorInt, p2ColorInt)
+
         // Actualizar iconos de jugadores
         updatePlayerIcons()
         
@@ -306,16 +347,7 @@ class MainActivity : AppCompatActivity() {
         val normalizedBallY = (result.ballY / 400.0).toFloat().coerceIn(0f, 1f)
         updateBallPosition(normalizedBallX, normalizedBallY)
         
-        // Actualizar tamaño de la bola si viene del servidor
-        // if (result.ballSize > 0) {
-        //    gameView.ballSize = result.ballSize.toFloat()
-        // }
-
-        // Actualizar palas usando coordenadas del servidor (0..400)
-        Log.d(TAG, "🎮 Actualizando palas - P1Y raw: ${result.p1y} | P2Y raw: ${result.p2y}")
-        
         // Actualizar dimensiones de las palas si vienen del servidor
-        // Usamos las dimensiones de P1 como referencia (asumiendo simetría)
         if (result.p1Height > 0) {
             gameView.serverPaddleHeight = result.p1Height.toFloat()
             gameView.serverPaddleWidth = result.p1Width.toFloat()
@@ -330,22 +362,15 @@ class MainActivity : AppCompatActivity() {
             gameView.serverBallSize = result.ballSize.toFloat()
         }
 
-        // Para logs y comparaciones fáciles, calcular también la normalizada simple (0..1)
-        val normalizedP1Y = (result.p1y / 400.0).toFloat().coerceIn(0f, 1f)
-        val normalizedP2Y = (result.p2y / 400.0).toFloat().coerceIn(0f, 1f)
-
+        // Actualizar posiciones de las palas
+        // P1 es siempre Izquierda, P2 es siempre Derecha en la lógica del servidor
         if (isLeftPlayer) {
-            // Soy jugador izquierdo (P1): actualizar la pala del RIVAL (derecha) desde la coordenada del servidor
+            // Soy jugador izquierdo (P1): actualizar la pala del RIVAL (derecha/P2) desde la coordenada del servidor
             gameView.updateRightPaddleFromServer(result.p2y.toInt())
-            Log.d(TAG, "👤 Mi pala (P1) local: ${gameView.leftPaddleY}")
         } else {
-            // Soy jugador derecho (P2): actualizar la pala del RIVAL (izquierda) desde la coordenada del servidor
+            // Soy jugador derecho (P2): actualizar la pala del RIVAL (izquierda/P1) desde la coordenada del servidor
             gameView.updateLeftPaddleFromServer(result.p1y.toInt())
-            Log.d(TAG, "👤 Mi pala (P2) local: ${gameView.rightPaddleY}")
         }
-        
-        Log.d(TAG, "🎯 Estado actualizado - Bola: (${"%1.2f".format(normalizedBallX)}, ${"%1.2f".format(normalizedBallY)}), " +
-                  "P1: ${"%1.2f".format(normalizedP1Y)}, P2: ${"%1.2f".format(normalizedP2Y)}")
     }
     
     private fun updatePlayerIcons() {
@@ -363,16 +388,20 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun updateBallColor(color: String) {
-        val ballColor = when (color.uppercase()) {
-            "WHITE" -> android.graphics.Color.WHITE
-            "RED" -> android.graphics.Color.RED
-            "BLACK" -> android.graphics.Color.BLACK
-            "YELLOW" -> android.graphics.Color.YELLOW
-            "BLUE" -> android.graphics.Color.BLUE
-            "GREEN" -> android.graphics.Color.GREEN
-            else -> android.graphics.Color.WHITE
-        }
+        val ballColor = parseColor(color)
         gameView.setBallColor(ballColor)
+    }
+
+    private fun parseColor(colorName: String): Int {
+        return when (colorName.uppercase()) {
+            "RED", "VERMELL", "ROJO" -> android.graphics.Color.RED
+            "BLACK", "NEGRE", "NEGRO" -> android.graphics.Color.BLACK
+            "BLUE", "BLAU", "AZUL" -> android.graphics.Color.BLUE
+            "GREEN", "VERD", "VERDE" -> android.graphics.Color.GREEN
+            "WHITE", "BLANC", "BLANCO" -> android.graphics.Color.WHITE
+            "YELLOW", "GROC", "AMARILLO" -> android.graphics.Color.YELLOW
+            else -> android.graphics.Color.GRAY
+        }
     }
     
     private fun showGameOver(winner: String) {

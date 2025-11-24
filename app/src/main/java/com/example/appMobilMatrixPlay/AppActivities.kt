@@ -6,6 +6,8 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.View
+import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -13,6 +15,92 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import org.json.JSONObject
+
+// ============================================================================
+// SplashActivity
+// ============================================================================
+
+/**
+ * Pantalla de loading inicial con logo del juego Ping Pong
+ */
+class SplashActivity : AppCompatActivity() {
+    
+    private val SPLASH_DELAY = 2500L // 2.5 segundos
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_splash)
+        
+        // Ocultar action bar
+        supportActionBar?.hide()
+        
+        // Después del delay, navegar a ConfigActivity
+        Handler(Looper.getMainLooper()).postDelayed({
+            startActivity(Intent(this, ConfigActivity::class.java))
+            finish() // Cerrar splash para que no vuelva con back button
+        }, SPLASH_DELAY)
+    }
+}
+
+// ============================================================================
+// ConfigActivity
+// ============================================================================
+
+// Pantalla de configuración del servidor
+class ConfigActivity : AppCompatActivity() {
+    
+    private lateinit var inputPlayerName: EditText
+    private lateinit var inputHost: EditText
+    private lateinit var messageText: TextView
+    private lateinit var btnConnect: Button
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_config)
+        
+        inputPlayerName = findViewById(R.id.et_protocol)
+        inputHost = findViewById(R.id.et_host)
+        messageText = findViewById(R.id.txt_message)
+        btnConnect = findViewById(R.id.btn_connect)
+        
+        // Configuración por defecto: Proxmox
+        setupDefaultConfig()
+        
+        btnConnect.setOnClickListener { connectServer() }
+    }
+    
+    private fun setupDefaultConfig() {
+        inputHost.setText("matrixplay4.ieti.site")
+        messageText.text = ""
+    }
+    
+    private fun connectServer() {
+        val playerName = inputPlayerName.text.toString()
+        val host = inputHost.text.toString()
+        val protocol = "wss" // Protocolo WebSocket Secure (SSL)
+        val port = "443" // Puerto 443 con SSL
+        
+        if (playerName.isEmpty() || host.isEmpty()) {
+            messageText.text = "Si us plau, completa tots els camps"
+            return
+        }
+        
+        messageText.text = "Connectant..."
+        
+        // Pasar configuración a WaitingRoomActivity
+        val intent = Intent(this, WaitingRoomActivity::class.java).apply {
+            putExtra("protocol", protocol)
+            putExtra("host", host)
+            putExtra("port", port)
+            putExtra("playerName", playerName)
+        }
+        startActivity(intent)
+    }
+}
+
+// ============================================================================
+// WaitingRoomActivity
+// ============================================================================
 
 class WaitingRoomActivity : AppCompatActivity() {
 
@@ -367,5 +455,123 @@ class WaitingRoomActivity : AppCompatActivity() {
         }
         
         handler.removeCallbacksAndMessages(null)
+    }
+}
+
+// ============================================================================
+// CountdownActivity
+// ============================================================================
+
+/**
+ * Actividad de cuenta atrás antes de iniciar el juego
+ * Muestra un conteo regresivo de 3 a 1 antes de comenzar la partida
+ */
+class CountdownActivity : AppCompatActivity() {
+
+    private lateinit var txtCountdown: TextView
+    private val handler = Handler(Looper.getMainLooper())
+    private var currentCount = 3
+    
+    // Variables para pasar a MainActivity
+    private var protocol: String = ""
+    private var host: String = ""
+    private var port: String = ""
+    private var playerName: String = ""
+    private var player2Name: String = ""
+    private var myColor: String = ""
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_countdown)
+        
+        // Ocultar action bar
+        supportActionBar?.hide()
+        
+        // Obtener datos del Intent
+        protocol = intent.getStringExtra("protocol") ?: "wss"
+        host = intent.getStringExtra("host") ?: "matrixplay4.ieti.site"
+        port = intent.getStringExtra("port") ?: "443"
+        playerName = intent.getStringExtra("playerName") ?: "Jugador"
+        player2Name = intent.getStringExtra("player2Name") ?: "Jugador 2"
+        myColor = intent.getStringExtra("myColor") ?: "rojo"
+        
+        // Inicializar vista
+        txtCountdown = findViewById(R.id.txt_countdown)
+        
+        // Iniciar cuenta atrás
+        startCountdown()
+    }
+    
+    private fun startCountdown() {
+        txtCountdown.text = currentCount.toString()
+        
+        handler.postDelayed({
+            currentCount--
+            
+            if (currentCount > 0) {
+                // Continuar cuenta atrás
+                txtCountdown.text = currentCount.toString()
+                startCountdown()
+            } else {
+                // Cuenta atrás terminada, iniciar juego
+                startGame()
+            }
+        }, 1000) // 1 segundo entre cada número
+    }
+    
+    private fun startGame() {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            putExtra("protocol", protocol)
+            putExtra("host", host)
+            putExtra("port", port)
+            putExtra("playerName", playerName)
+            putExtra("player2Name", player2Name)
+            putExtra("myColor", myColor)
+        }
+        startActivity(intent)
+        finish() // Cerrar CountdownActivity
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        handler.removeCallbacksAndMessages(null)
+    }
+}
+
+// ============================================================================
+// GameOverActivity
+// ============================================================================
+
+class GameOverActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_game_over)
+
+        val txtResult = findViewById<TextView>(R.id.txt_game_result)
+        val btnBack = findViewById<Button>(R.id.btn_back)
+        val btnExit = findViewById<Button>(R.id.btn_exit)
+
+        // Obtener el resultado del intent
+        val didWin = intent.getBooleanExtra("didWin", false)
+        
+        if (didWin) {
+            txtResult.text = "VICTÒRIA"
+        } else {
+            txtResult.text = "DERROTA"
+        }
+
+        btnBack.setOnClickListener {
+            // Volver a la pantalla de configuración
+            val intent = Intent(this, ConfigActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+            finish()
+        }
+
+        btnExit.setOnClickListener {
+            // Salir de la aplicación
+            finishAffinity()
+        }
     }
 }

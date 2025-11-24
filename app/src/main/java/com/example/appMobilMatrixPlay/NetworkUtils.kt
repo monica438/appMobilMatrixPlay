@@ -1,8 +1,191 @@
 package com.example.appMobilMatrixPlay
 
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import okhttp3.*
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.concurrent.TimeUnit
+
+// ============================================================================
+// WebSocketClient
+// ============================================================================
+
+class WebSocketClient(private val url: String) {
+    
+    private var webSocket: WebSocket? = null
+    private val client = OkHttpClient.Builder()
+        .readTimeout(0, TimeUnit.MILLISECONDS)
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .pingInterval(30, TimeUnit.SECONDS)
+        .build()
+    
+    private val handler = Handler(Looper.getMainLooper())
+    
+    private var onMessageCallback: ((String) -> Unit)? = null
+    private var onOpenCallback: (() -> Unit)? = null
+    private var onCloseCallback: (() -> Unit)? = null
+    private var onErrorCallback: ((String) -> Unit)? = null
+    
+    private var shouldReconnect = true
+    private var conectado = false
+    private var heartbeatRunnable: Runnable? = null
+    
+    fun connect() {
+        val request = Request.Builder()
+            .url(url)
+            .build()
+        
+        webSocket = client.newWebSocket(request, object : WebSocketListener() {
+            override fun onOpen(webSocket: WebSocket, response: Response) {
+                conectado = true
+                Log.d(TAG, "✅ WebSocket CONNECTED: $url")
+                handler.post {
+                    startHeartbeat()
+                    onOpenCallback?.invoke()
+                }
+            }
+            
+            override fun onMessage(webSocket: WebSocket, text: String) {
+                Log.d(TAG, "📩 Received raw: $text")
+
+                try {
+                    val json = JSONObject(text)
+                    val keys = json.keys()
+                    val details = StringBuilder()
+                    while (keys.hasNext()) {
+                        val k = keys.next()
+                        details.append("$k=${json.opt(k)}; ")
+                    }
+                    Log.d(TAG, "📊 Received parsed: ${details}")
+                } catch (e: Exception) {
+                    // Not JSON
+                }
+
+                handler.post {
+                    onMessageCallback?.invoke(text)
+                }
+            }
+            
+            override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+                conectado = false
+                Log.d(TAG, "WebSocket closing: code=$code reason=$reason")
+            }
+            
+            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                conectado = false
+                Log.d(TAG, "WebSocket closed: code=$code reason=$reason")
+                stopHeartbeat()
+                handler.post {
+                    onCloseCallback?.invoke()
+                }
+                
+                if (shouldReconnect) {
+                    scheduleReconnect()
+                }
+            }
+            
+            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                conectado = false
+                Log.d(TAG, "❌ WebSocket failure: ${t.message}")
+                stopHeartbeat()
+                handler.post {
+                    onErrorCallback?.invoke(t.message ?: "Unknown error")
+                }
+                
+                if (shouldReconnect) {
+                    scheduleReconnect()
+                }
+            }
+        })
+    }
+    
+    private fun startHeartbeat() {
+        heartbeatRunnable = object : Runnable {
+            override fun run() {
+                if (conectado) {
+                    val ping = JSONObject().apply {
+                        put("type", "ping")
+                        put("timestamp", System.currentTimeMillis())
+                    }
+                    sendJSON(ping)
+                    Log.d(TAG, "💓 Heartbeat sent")
+                }
+                handler.postDelayed(this, HEARTBEAT_INTERVAL)
+            }
+        }
+        handler.post(heartbeatRunnable!!)
+    }
+    
+    private fun stopHeartbeat() {
+        heartbeatRunnable?.let {
+            handler.removeCallbacks(it)
+        }
+        heartbeatRunnable = null
+    }
+    
+    private fun scheduleReconnect() {
+        handler.postDelayed({
+            if (shouldReconnect && !conectado) {
+                Log.d(TAG, "🔄 Attempting reconnect...")
+                connect()
+            }
+        }, RECONNECT_DELAY)
+    }
+    
+    fun send(message: String) {
+        if (conectado) {
+            Log.d(TAG, "📤 Sending: $message")
+            webSocket?.send(message)
+        } else {
+            Log.d(TAG, "🚫 Send skipped, not connected: $message")
+        }
+    }
+    
+    fun sendJSON(json: JSONObject) {
+        val jsonString = json.toString()
+        Log.d(TAG, "📤 Enviando JSON: $jsonString")
+        send(jsonString)
+    }
+    
+    fun disconnect() {
+        shouldReconnect = false
+        conectado = false
+        stopHeartbeat()
+        webSocket?.close(1000, "Client closing")
+        webSocket = null
+        Log.d(TAG, "🔴 WebSocket disconnected")
+    }
+    
+    fun onMessage(callback: (String) -> Unit) {
+        onMessageCallback = callback
+    }
+    
+    fun onOpen(callback: () -> Unit) {
+        onOpenCallback = callback
+    }
+    
+    fun onClose(callback: () -> Unit) {
+        onCloseCallback = callback
+    }
+    
+    fun onError(callback: (String) -> Unit) {
+        onErrorCallback = callback
+    }
+    
+    fun isConnected(): Boolean = conectado
+    
+    companion object {
+        private const val TAG = "WebSocketClient"
+        private const val RECONNECT_DELAY = 3000L
+        private const val HEARTBEAT_INTERVAL = 15000L
+    }
+}
+
+// ============================================================================
+// MessageHandler
+// ============================================================================
 
 object MessageHandler {
     
@@ -83,7 +266,8 @@ object MessageHandler {
         onCountdown: ((Int) -> Unit)? = null,
         onGameStart: (() -> Unit)? = null,
         onGameOver: ((String) -> Unit)? = null,
-        onPlayerJoined: ((String) -> Unit)? = null
+        onPlayerJoined: ((String) -> Unit)? = null,
+        onRegistreOk: ((String) -> Unit)? = null
     ) {
         try {
             val json = JSONObject(mensaje)
@@ -92,6 +276,12 @@ object MessageHandler {
             Log.d(TAG, "📩 Mensaje recibido - Type: $type")
             
             when (type) {
+                "RegistreOk" -> {
+                    val color = json.optString("color", "VERMELL")
+                    Log.d(TAG, "✅ RegistreOk - Color asignado: $color")
+                    onRegistreOk?.invoke(color)
+                }
+
                 "broadcastHola" -> {
                     val value = json.optString("value", "desconegut")
                     Log.d(TAG, "✅ BroadcastHola: $value")
@@ -159,19 +349,21 @@ object MessageHandler {
         try {
             val result = JocDataResult()
             
-            // Extraer jugadores
+            // Extraer jugadores (lista de nombres)
             val jugadors = jocData.optJSONArray("Jugadors")
+            val playerNames = mutableListOf<String>()
             if (jugadors != null) {
                 for (i in 0 until jugadors.length()) {
                     val nombre = jugadors.optString(i, "")
                     if (nombre.isNotEmpty()) {
-                        when (i) {
-                            0 -> result.jugador1 = nombre
-                            1 -> result.jugador2 = nombre
-                        }
+                        playerNames.add(nombre)
                     }
                 }
             }
+            
+            // Asignar nombres temporalmente (se corregirá en MainActivity con la info de RegistreOk)
+            if (playerNames.isNotEmpty()) result.jugador1 = playerNames[0]
+            if (playerNames.size > 1) result.jugador2 = playerNames[1]
             
             // Determinar mi posición
             result.soyJugador1 = (result.jugador1 == playerName)
@@ -279,4 +471,90 @@ object MessageHandler {
         Log.d(TAG, "🎯 Puntuaciones - J1: $j1Punts, J2: $j2Punts")
         return Pair(j1Punts, j2Punts)
     }
+}
+
+// ============================================================================
+// GestioMoviment
+// ============================================================================
+
+class GestioMoviment(
+    private val wsClient: WebSocketClient
+) {
+    
+    companion object {
+        private const val TAG = "GestioMoviment"
+        private const val SEND_INTERVAL = 8L // Enviar cada 8ms (~120fps) para máxima velocidad
+    }
+    
+    private var direccioActual = "none"
+    private val handler = Handler(Looper.getMainLooper())
+    private var continuousSendRunnable: Runnable? = null
+    
+    fun enviarDireccio(direccio: String) {
+        val json = JSONObject()
+        json.put("type", "move")
+        json.put("direction", direccio)
+        wsClient.sendJSON(json)
+        // Log.d(TAG, "📤 Enviando: type=move, direction=$direccio")  // Demasiados logs
+    }
+    
+    fun enviarPosicion(y: Int) {
+        val yClamped = y.coerceIn(0, 400)
+        val json = JSONObject()
+        json.put("type", "position")
+        json.put("y", yClamped)
+        wsClient.sendJSON(json)
+    }
+    
+    fun handleKeyEvent(isPressed: Boolean, isUp: Boolean) {
+        if (isPressed) {
+            direccioActual = if (isUp) "up" else "down"
+            enviarDireccio(direccioActual)
+        } else {
+            val expectedDirection = if (isUp) "up" else "down"
+            if (direccioActual == expectedDirection) {
+                direccioActual = "none"
+                enviarDireccio(direccioActual)
+            }
+        }
+    }
+    
+    // Para touch: enviar posición exacta
+    private var lastY: Float = 0f
+    private var currentDirection: String = "none"
+    
+    fun handleTouchMove(serverY: Float) {
+        // Enviar posición exacta al servidor (0..400)
+        val y = serverY.toInt()
+        enviarPosicion(y)
+
+        lastY = serverY
+    }
+    
+    private fun startContinuousSend() {
+        continuousSendRunnable = object : Runnable {
+            override fun run() {
+                if (currentDirection != "none") {
+                    enviarDireccio(currentDirection)
+                    handler.postDelayed(this, SEND_INTERVAL)
+                }
+            }
+        }
+        handler.postDelayed(continuousSendRunnable!!, SEND_INTERVAL)
+    }
+    
+    private fun stopContinuousSend() {
+        continuousSendRunnable?.let {
+            handler.removeCallbacks(it)
+            continuousSendRunnable = null
+        }
+    }
+    
+    fun stopMovement() {
+        // Solo necesitamos enviar la última posición conocida
+        enviarPosicion(lastY.toInt())
+        Log.d(TAG, "⏹️ Movimiento detenido - Última posición: ${lastY.toInt()}")
+    }
+    
+    fun getDireccionActual(): String = direccioActual
 }

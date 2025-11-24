@@ -64,6 +64,10 @@ class GameView @JvmOverloads constructor(
         isAntiAlias = true
     }
 
+    // Colores de las palas
+    private var leftPaddleColor = Color.RED
+    private var rightPaddleColor = Color.BLACK
+
     // Posiciones y tamaños
     var paddleWidth = 30f
     var paddleHeight = 100f
@@ -218,7 +222,7 @@ class GameView @JvmOverloads constructor(
         val thumbY = sliderTop + edgeNormalized * (sliderBottom - sliderTop)
 
         // Cambiar color del thumb según el jugador
-        sliderThumbPaint.color = if (localIsLeftPlayer) Color.RED else Color.BLACK
+        sliderThumbPaint.color = if (localIsLeftPlayer) leftPaddleColor else rightPaddleColor
         canvas.drawCircle(sliderX, thumbY, sliderThumbRadius, sliderThumbPaint)
     }
 
@@ -303,6 +307,14 @@ class GameView @JvmOverloads constructor(
 
     fun setBallColor(color: Int) {
         ballPaint.color = color
+        invalidate()
+    }
+
+    fun setPaddleColors(leftColor: Int, rightColor: Int) {
+        leftPaddleColor = leftColor
+        rightPaddleColor = rightColor
+        paddleLeftPaint.color = leftColor
+        paddleRightPaint.color = rightColor
         invalidate()
     }
 
