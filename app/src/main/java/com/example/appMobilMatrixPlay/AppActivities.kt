@@ -570,7 +570,6 @@ class GameOverActivity : AppCompatActivity() {
         }
 
         btnExit.setOnClickListener {
-            // Salir de la aplicación
             finishAffinity()
         }
     }
