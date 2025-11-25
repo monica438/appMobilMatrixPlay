@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_blue"
+    android:fillViewport="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <!-- Logo en la esquina superior derecha -->
+        <ImageView
+            android:id="@+id/logo_small"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/logo"
+            android:scaleType="fitCenter"
+            android:contentDescription="Logo"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Panel de Login centrado -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/login_card"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="24dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@color/background_blue"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintWidth_max="500dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <!-- Título LOGIN -->
+                <TextView
+                    android:id="@+id/title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="LOGIN"
+                    android:textAlignment="viewStart"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"
+                    android:fontFamily="sans-serif"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- Campo NOM (Nombre de jugador) -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="NOM"
+                    android:textColor="@color/black"
+                    android:fontFamily="sans-serif"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp"/>
+
+                <EditText
+                    android:id="@+id/et_protocol"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:hint="Nom del jugador"
+                    android:inputType="text"
+                    android:textColor="@color/black"
+                    android:textColorHint="#666666"
+                    android:fontFamily="sans-serif"
+                    android:textSize="14sp"
+                    android:background="@android:color/white"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:layout_marginBottom="16dp"/>
+
+                <!-- Campo URL (Host solamente) -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="URL"
+                    android:textColor="@color/black"
+                    android:fontFamily="sans-serif"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp"/>
+
+                <EditText
+                    android:id="@+id/et_host"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:hint="host"
+                    android:inputType="text"
+                    android:textColor="@color/black"
+                    android:textColorHint="#666666"
+                    android:fontFamily="sans-serif"
+                    android:textSize="14sp"
+                    android:background="@android:color/white"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:layout_marginBottom="16dp"/>
+
+                <!-- Mensaje de error -->
+                <TextView
+                    android:id="@+id/txt_message"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textAlignment="center"
+                    android:textColor="@android:color/holo_red_dark"
+                    android:fontFamily="sans-serif"
+                    android:textSize="12sp"
+                    android:layout_marginBottom="8dp"/>
+
+                <!-- Botón CONNECTA -->
+                <Button
+                    android:id="@+id/btn_connect"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:text="CONNECTA"
+                    android:textColor="@color/black"
+                    android:fontFamily="sans-serif"
+                    android:textSize="14sp"
+                    android:paddingStart="32dp"
+                    android:paddingEnd="32dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="16dp"/>
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>
