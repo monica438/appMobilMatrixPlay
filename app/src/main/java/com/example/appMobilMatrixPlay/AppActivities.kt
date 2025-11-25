@@ -462,10 +462,6 @@ class WaitingRoomActivity : AppCompatActivity() {
 // CountdownActivity
 // ============================================================================
 
-/**
- * Actividad de cuenta atrás antes de iniciar el juego
- * Muestra un conteo regresivo de 3 a 1 antes de comenzar la partida
- */
 class CountdownActivity : AppCompatActivity() {
 
     private lateinit var txtCountdown: TextView
