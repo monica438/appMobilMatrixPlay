@@ -279,6 +279,17 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
+                
+                "gameOver" -> {
+                    val winner = json.optString("winner", "")
+                    val loser = json.optString("loser", "")
+                    
+                    Log.d(TAG, "🏁 GameOver recibido - Winner: $winner, Loser: $loser")
+                    
+                    runOnUiThread {
+                        showGameOver(winner)
+                    }
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "❌ Error procesando mensaje: ${e.message}")
@@ -405,9 +416,22 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun showGameOver(winner: String) {
-        val didIWin = winner == playerName || 
-                      (winner.uppercase() == "RED" && isLeftPlayer) ||
-                      (winner == "negro" && !isLeftPlayer)
+        // Determinar si gané basado en puntuaciones (más fiable)
+        val myScore = if (isLeftPlayer) leftScore else rightScore
+        val otherScore = if (isLeftPlayer) rightScore else leftScore
+        
+        val didIWin = if (myScore != otherScore) {
+            myScore > otherScore
+        } else {
+            // Fallback: comprobar por nombre/color si hay empate o desconexión
+            winner == playerName || 
+            (winner.equals("RED", ignoreCase = true) && isLeftPlayer) ||
+            (winner.equals("BLACK", ignoreCase = true) && !isLeftPlayer) ||
+            (winner.equals("VERMELL", ignoreCase = true) && isLeftPlayer) ||
+            (winner.equals("NEGRE", ignoreCase = true) && !isLeftPlayer)
+        }
+        
+        Log.d(TAG, "🏁 GameOver - Winner: $winner, MyScore: $myScore, OtherScore: $otherScore, DidIWin: $didIWin")
         
         // Desconectar del servidor
         wsClient?.disconnect()

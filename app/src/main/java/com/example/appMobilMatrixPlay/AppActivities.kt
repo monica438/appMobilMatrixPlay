@@ -542,6 +542,10 @@ class GameOverActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Ocultar action bar para pantalla completa
+        supportActionBar?.hide()
+        
         setContentView(R.layout.activity_game_over)
 
         val txtResult = findViewById<TextView>(R.id.txt_game_result)
