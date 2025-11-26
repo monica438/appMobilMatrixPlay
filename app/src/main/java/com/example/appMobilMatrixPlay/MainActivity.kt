@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
-import android.view.KeyEvent
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -15,7 +13,6 @@ import org.json.JSONObject
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        private const val TAG = "MatrixPlayDebug"
         private var sharedWebSocketClient: WebSocketClient? = null
         
         fun setWebSocketClient(client: WebSocketClient?) {
@@ -85,8 +82,6 @@ class MainActivity : AppCompatActivity() {
         isLeftPlayer = (myColor == "RED")
         myServerColor = if (isLeftPlayer) "VERMELL" else "NEGRE"
         
-        Log.d(TAG, "🎮 Configuración - Color: $myColor, ServerColor: $myServerColor, isLeftPlayer: $isLeftPlayer, Player: $playerName")
-        
         if (isLeftPlayer) {
             playerLeftName.text = playerName
             playerRightName.text = player2Name
@@ -128,9 +123,6 @@ class MainActivity : AppCompatActivity() {
         val reuseConnection = intent.getBooleanExtra("reuseConnection", false)
         
         if (reuseConnection && sharedWebSocketClient != null) {
-            // Reutilizar conexión existente
-            Log.d(TAG, "♻️ Reutilizando conexión WebSocket existente")
-            Log.d(TAG, "📊 Estado de conexión compartida: ${if (sharedWebSocketClient?.isConnected() == true) "CONECTADA" else "DESCONECTADA"}")
             wsClient = sharedWebSocketClient
             sharedWebSocketClient = null // Limpiar para evitar fugas de memoria
             
@@ -153,9 +145,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             
-            // Verificar si la conexión sigue activa
             if (wsClient?.isConnected() != true) {
-                Log.e(TAG, "⚠️ Conexión WebSocket no está activa, intentando reconectar...")
                 txtStatus.text = "Reconnectant..."
                 wsClient?.connect()
             }
@@ -165,7 +155,6 @@ class MainActivity : AppCompatActivity() {
                 txtStatus.text = "Connectat - En joc"
                 wsClient?.let { ws ->
                     gestioMoviment = GestioMoviment(ws)
-                    Log.d(TAG, "✅ GestioMoviment inicializado con conexión existente")
                 }
             }
         } else {
@@ -176,7 +165,6 @@ class MainActivity : AppCompatActivity() {
             val url = "$protocol://$host:$port"
             
             txtStatus.text = "Connectant..."
-            Log.d(TAG, "🔗 Conectando a: $url")
             
             wsClient = WebSocketClient(url)
             
@@ -219,16 +207,9 @@ class MainActivity : AppCompatActivity() {
             val json = JSONObject(message)
             val type = json.optString("type", "")
             
-            Log.d(TAG, "📩 Mensaje - Type: $type")
-            
             when (type) {
                 "RegistreOk" -> {
                     val color = json.optString("color", "VERMELL")
-                    Log.d(TAG, "✅ RegistreOk - Color asignado: $color")
-                    
-                    // Asignar lado basado en el color recibido del servidor
-                    // VERMELL -> P1 (Izquierda)
-                    // NEGRE -> P2 (Derecha)
                     val isLeft = color.equals("VERMELL", ignoreCase = true)
                     
                     runOnUiThread {
@@ -238,11 +219,7 @@ class MainActivity : AppCompatActivity() {
                         
                         gameView.isLeftPlayer = isLeftPlayer
                         gameView.localIsLeftPlayer = isLeftPlayer
-                        
-                        // Actualizar iconos inmediatamente
                         updatePlayerIcons()
-                        
-                        Log.d(TAG, "👤 Identidad confirmada: ${if(isLeft) "P1 (Izquierda/Rojo)" else "P2 (Derecha/Negro)"}")
                     }
                 }
 
@@ -250,7 +227,6 @@ class MainActivity : AppCompatActivity() {
                     val value = json.optString("value", "")
                     runOnUiThread {
                         txtStatus.text = value
-                        Log.d(TAG, "✅ BroadcastHola: $value")
                     }
                 }
                 
@@ -282,23 +258,17 @@ class MainActivity : AppCompatActivity() {
                 
                 "gameOver" -> {
                     val winner = json.optString("winner", "")
-                    val loser = json.optString("loser", "")
-                    
-                    Log.d(TAG, "🏁 GameOver recibido - Winner: $winner, Loser: $loser")
-                    
                     runOnUiThread {
                         showGameOver(winner)
                     }
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error procesando mensaje: ${e.message}")
+            e.printStackTrace()
         }
     }
     
     private fun updateGameState(result: MessageHandler.JocDataResult) {
-        Log.d(TAG, "📥 updateGameState llamado - J1: ${result.jugador1}, J2: ${result.jugador2}")
-        
         // Lógica robusta para asignar nombres basada en mi identidad confirmada (isLeftPlayer)
         // El servidor envía una lista de nombres en 'Jugadors' sin orden garantizado.
         // Debemos encontrar cuál es el mío y cuál es el del rival.
@@ -423,15 +393,12 @@ class MainActivity : AppCompatActivity() {
         val didIWin = if (myScore != otherScore) {
             myScore > otherScore
         } else {
-            // Fallback: comprobar por nombre/color si hay empate o desconexión
             winner == playerName || 
             (winner.equals("RED", ignoreCase = true) && isLeftPlayer) ||
             (winner.equals("BLACK", ignoreCase = true) && !isLeftPlayer) ||
             (winner.equals("VERMELL", ignoreCase = true) && isLeftPlayer) ||
             (winner.equals("NEGRE", ignoreCase = true) && !isLeftPlayer)
         }
-        
-        Log.d(TAG, "🏁 GameOver - Winner: $winner, MyScore: $myScore, OtherScore: $otherScore, DidIWin: $didIWin")
         
         // Desconectar del servidor
         wsClient?.disconnect()
@@ -446,6 +413,5 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         wsClient?.disconnect()
-        Log.d(TAG, "🔴 MainActivity destroyed")
     }
 }

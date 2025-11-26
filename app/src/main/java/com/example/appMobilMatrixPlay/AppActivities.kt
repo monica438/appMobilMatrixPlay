@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -104,10 +103,6 @@ class ConfigActivity : AppCompatActivity() {
 
 class WaitingRoomActivity : AppCompatActivity() {
 
-    companion object {
-        private const val TAG = "WaitingRoomActivity"
-    }
-
     private lateinit var txtPlayer1Name: TextView
     private lateinit var txtPlayer2Name: TextView
     private lateinit var txtPlayer2Label: TextView
@@ -167,7 +162,6 @@ class WaitingRoomActivity : AppCompatActivity() {
         val url = "$protocol://$host:$port"
         
         txtStatus.text = "Connectant a $url..."
-        Log.d(TAG, "🔗 Conectando a: $url")
 
         webSocketClient = WebSocketClient(url)
         
@@ -183,10 +177,8 @@ class WaitingRoomActivity : AppCompatActivity() {
                     sendBroadcastMessage("hola")
                 }, 500)
                 
-                // Timeout de seguridad
                 handler.postDelayed({
                     if (!player2Connected) {
-                        Log.d(TAG, "⏱️ Timeout: Aún esperando jugador 2...")
                         txtStatus.text = "Esperant segon jugador..."
                     }
                 }, 30000)
@@ -251,8 +243,6 @@ class WaitingRoomActivity : AppCompatActivity() {
 
     private fun handleServerMessage(message: String) {
         try {
-            Log.d(TAG, "📩 Mensaje recibido: $message")
-            
             MessageHandler.procesarMensaje(
                 mensaje = message,
                 
@@ -288,7 +278,6 @@ class WaitingRoomActivity : AppCompatActivity() {
                                 txtStatus.text = "Tots dos jugadors connectats!"
                                 loadingSpinner.visibility = View.GONE
 
-                                // Solo actualizar icono si ya sabemos nuestro color
                                 if (colorAssigned) {
                                     if (myColor == "rojo") {
                                         player2Icon.setImageResource(R.drawable.negro)
@@ -297,7 +286,6 @@ class WaitingRoomActivity : AppCompatActivity() {
                                     }
                                 }
 
-                                Log.d(TAG, "✅ Jugador 2 detectado: $joinedPlayerName, Mi color: $myColor")
                                 Toast.makeText(this, "Jugador 2 connectat: $joinedPlayerName", Toast.LENGTH_SHORT).show()
                                 // Esperar countdown del servidor para iniciar
                             } else {
@@ -319,15 +307,12 @@ class WaitingRoomActivity : AppCompatActivity() {
                 onCountdown = { count ->
                     runOnUiThread {
                         if (count > 0) {
-                            // Mostrar countdown del servidor
                             txtStatus.text = "Iniciant en $count..."
-                            Log.d(TAG, "⏱️ Countdown del servidor: $count")
                         } else {
                             txtStatus.text = "GO!"
-                            Log.d(TAG, "🚀 Countdown completado - Iniciando juego")
                             handler.postDelayed({
                                 startMainActivity()
-                            }, 500) // Pequeño delay para mostrar "GO!"
+                            }, 500)
                         }
                     }
                 }
@@ -335,7 +320,6 @@ class WaitingRoomActivity : AppCompatActivity() {
             
         } catch (e: Exception) {
             e.printStackTrace()
-            Log.e(TAG, "❌ Error procesando mensaje: ${e.message}")
             runOnUiThread {
                 Toast.makeText(this, "Error processant missatge", Toast.LENGTH_SHORT).show()
             }
@@ -343,16 +327,10 @@ class WaitingRoomActivity : AppCompatActivity() {
     }
     
     private fun handleJocData(result: MessageHandler.JocDataResult) {
-        Log.d(TAG, "📊 JocData recibido - J1: ${result.jugador1}, J2: ${result.jugador2}, SoyJ1: ${result.soyJugador1}")
-        
-        // Determinar mi color basándose en la posición del servidor
         if (!colorAssigned) {
             myColor = if (result.soyJugador1) "rojo" else "negro"
             colorAssigned = true
             
-            Log.d(TAG, "🎨 Color asignado: $myColor (${if (result.soyJugador1) "Jugador 1 - IZQUIERDA/RED" else "Jugador 2 - DERECHA/BLACK"})")
-            
-            // Actualizar iconos según mi color
             if (myColor == "rojo") {
                 player1Icon.setImageResource(R.drawable.rojo)
                 player2Icon.setImageResource(R.drawable.gris)
@@ -373,11 +351,7 @@ class WaitingRoomActivity : AppCompatActivity() {
                 txtStatus.text = "¡Ambos jugadores conectados!"
                 loadingSpinner.visibility = View.GONE
                 
-                // Actualizar icono del jugador 2
                 player2Icon.setImageResource(if (myColor == "rojo") R.drawable.negro else R.drawable.rojo)
-                
-                Log.d(TAG, "✅ Jugador 2 conectado: $player2Name, Mi color: $myColor")
-                // El servidor enviará el countdown para iniciar
             }
         } else if (result.jugador1.isNotEmpty() && result.jugador1 != playerName) {
             // El otro jugador es jugador 1 y yo soy jugador 2
@@ -389,11 +363,7 @@ class WaitingRoomActivity : AppCompatActivity() {
                 txtStatus.text = "¡Ambos jugadores conectados!"
                 loadingSpinner.visibility = View.GONE
                 
-                // Actualizar icono del jugador 2
                 player2Icon.setImageResource(if (myColor == "rojo") R.drawable.negro else R.drawable.rojo)
-                
-                Log.d(TAG, "✅ Jugador 1 detectado: $player2Name, Mi color: $myColor")
-                // El servidor enviará el countdown para iniciar
             }
         }
     }
@@ -407,25 +377,16 @@ class WaitingRoomActivity : AppCompatActivity() {
             return
         }
         
-        // Si no se ha asignado color, usar rojo por defecto (primer jugador)
         if (!colorAssigned) {
             myColor = "rojo"
             colorAssigned = true
-            Log.d(TAG, "⚠️ Color no asignado, usando ROJO por defecto")
         }
         
-        // Si no hay jugador 2, usar nombre por defecto
         if (!player2Connected || player2Name.isEmpty()) {
             player2Name = "Esperant..."
         }
         
-        Log.d(TAG, "🚀 Iniciando juego - Mi color: $myColor, Jugador 2: $player2Name")
-        
-        // Marcar que estamos transfiriendo la conexión
         isTransferringConnection = true
-        
-        // Transferir la conexión WebSocket existente a MainActivity
-        Log.d(TAG, "🔄 Transfiriendo conexión WebSocket a MainActivity")
         MainActivity.setWebSocketClient(webSocketClient)
         
         val intent = Intent(this, MainActivity::class.java).apply {
@@ -446,12 +407,8 @@ class WaitingRoomActivity : AppCompatActivity() {
         currentDialog?.dismiss()
         currentDialog = null
         
-        // Solo desconectar si NO estamos transfiriendo la conexión
         if (!isTransferringConnection) {
-            Log.d(TAG, "❌ Desconectando WebSocket (no hay transferencia)")
             webSocketClient?.disconnect()
-        } else {
-            Log.d(TAG, "✅ Manteniendo WebSocket activo (transferencia en progreso)")
         }
         
         handler.removeCallbacksAndMessages(null)
