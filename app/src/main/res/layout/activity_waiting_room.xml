@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
-        <!-- Logo en la esquina superior derecha -->
+        <!-- logo -->
         <ImageView
             android:id="@+id/logo_small"
             android:layout_width="60dp"
@@ -22,7 +22,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Panel de Sala de Espera -->
+        <!-- panel waiting room -->
         <androidx.cardview.widget.CardView
             android:id="@+id/waiting_card"
             android:layout_width="0dp"
@@ -45,7 +45,7 @@
                 android:padding="24dp"
                 android:gravity="center">
 
-                <!-- Título SALA D'ESPERA -->
+                <!-- titulo -->
                 <TextView
                     android:id="@+id/title"
                     android:layout_width="match_parent"
@@ -58,7 +58,7 @@
                     android:fontFamily="sans-serif"
                     android:layout_marginBottom="32dp" />
 
-                <!-- Contenedor de jugadores -->
+                <!-- jugadores container -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -66,7 +66,7 @@
                     android:gravity="center"
                     android:layout_marginBottom="16dp">
 
-                    <!-- Jugador 1 (Conectado) -->
+                    <!-- J1 -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -75,7 +75,7 @@
                         android:gravity="center"
                         android:padding="8dp">
 
-                        <!-- Icono jugador 1 -->
+                        <!-- icono J1 -->
                         <ImageView
                             android:id="@+id/player1_icon"
                             android:layout_width="80dp"
@@ -84,7 +84,7 @@
                             android:scaleType="fitCenter"
                             android:contentDescription="Jugador 1" />
 
-                        <!-- Nombre jugador 1 -->
+                        <!-- nombre J1 -->
                         <TextView
                             android:id="@+id/txt_player1_label"
                             android:layout_width="wrap_content"
@@ -121,7 +121,7 @@
                         android:layout_marginStart="8dp"
                         android:layout_marginEnd="8dp" />
 
-                    <!-- Jugador 2 (Esperando) -->
+                    <!-- J2 -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -130,7 +130,7 @@
                         android:gravity="center"
                         android:padding="8dp">
 
-                        <!-- Icono jugador 2 -->
+                        <!-- icono J2 -->
                         <ImageView
                             android:id="@+id/player2_icon"
                             android:layout_width="80dp"
@@ -139,7 +139,7 @@
                             android:scaleType="fitCenter"
                             android:contentDescription="Jugador 2" />
 
-                        <!-- Nombre jugador 2 -->
+                        <!-- nombre J2 -->
                         <TextView
                             android:id="@+id/txt_player2_label"
                             android:layout_width="wrap_content"
@@ -167,7 +167,7 @@
 
                 </LinearLayout>
 
-                <!-- Mensaje de estado -->
+                <!-- mensaje de estado -->
                 <TextView
                     android:id="@+id/txt_status"
                     android:layout_width="match_parent"
@@ -179,7 +179,7 @@
                     android:textSize="14sp"
                     android:layout_marginTop="16dp" />
 
-                <!-- Indicador de carga -->
+                <!-- indicador de carga -->
                 <ProgressBar
                     android:id="@+id/loading_spinner"
                     android:layout_width="wrap_content"

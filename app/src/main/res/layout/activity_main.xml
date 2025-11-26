@@ -8,7 +8,7 @@
     android:background="@color/background_blue"
     tools:context=".MainActivity" >
 
-    <!-- Área de juego Ping Pong (4:4 centrado) -->
+    <!-- 4:4 centrado -->
     <FrameLayout
         android:id="@+id/game_container"
         android:layout_width="0dp"
@@ -19,7 +19,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
         
-        <!-- Logo semitransparente en el centro -->
+        <!-- logo -->
         <ImageView
             android:id="@+id/background_logo"
             android:layout_width="300dp"
@@ -30,14 +30,14 @@
             android:alpha="0.15"
             android:contentDescription="Logo de fons" />
         
-        <!-- Vista personalizada del juego con Canvas -->
+        <!-- canvas del juego -->
         <com.example.appMobilMatrixPlay.GameView
             android:id="@+id/game_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
     </FrameLayout>
 
-    <!-- Marcador Jugador Esquerre (Vermell) - Overlay superior esquerre -->
+    <!-- overlay marcador izquierda -->
     <LinearLayout
         android:id="@+id/player_left_info"
         android:layout_width="wrap_content"
@@ -80,7 +80,7 @@
             android:layout_marginTop="4dp" />
     </LinearLayout>
 
-    <!-- Marcador Jugador Dret (Negre) - Overlay superior dret -->
+    <!-- overlay marcador derecha -->
     <LinearLayout
         android:id="@+id/player_right_info"
         android:layout_width="wrap_content"
@@ -123,7 +123,7 @@
             android:layout_marginTop="4dp" />
     </LinearLayout>
 
-    <!-- Missatge d'estat - Overlay inferior centrat -->
+    <!-- estado de conexión -->
     <TextView
         android:id="@+id/txt_status"
         android:layout_width="wrap_content"
